@@ -4,3 +4,6 @@
 [submodule "3rdparty/gli"]
 	path = 3rdparty/gli
 	url = https://github.com/voidstorm/gli.git
+[submodule "3rdparty/assimp"]
+	path = 3rdparty/assimp
+	url = https://github.com/voidstorm/assimp.git
