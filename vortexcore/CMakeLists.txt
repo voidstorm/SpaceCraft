@@ -6,7 +6,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 
 find_package(Vulkan)
-find_package(GLM)
+#find_package(GLM)
 
 if (ENABLE_DIRECTX)
   find_package(DirectX)
@@ -87,6 +87,22 @@ set(PRIVATE_HEADER_FILES
 
 set(SOURCE_FILES
   src/AppWindow.cpp
+  src/Camera.cpp
+  src/CameraComponent.cpp
+  src/Component.cpp
+  src/dllmain.cpp
+  src/Frustum.cpp
+  src/Game.cpp
+  src/Material.cpp
+  src/Mesh.cpp
+  src/MeshComponent.cpp
+  src/RenderContext.cpp
+  src/Scene.cpp
+  src/SceneGraph.cpp
+  src/SceneManager.cpp
+  src/SceneObject.cpp
+  src/TransformCache.cpp
+  src/VortexCore.cpp
 )
 
 
