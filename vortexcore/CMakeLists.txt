@@ -2,11 +2,12 @@ cmake_minimum_required(VERSION 3.7)
 set (CURRENT_MODULE_NAME  vortexcore)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
 
+list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/glm")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 
 find_package(Vulkan)
-#find_package(GLM)
+find_package(GLM)
 
 if (ENABLE_DIRECTX)
   find_package(DirectX)
@@ -48,7 +49,8 @@ endfunction(COFFEESetDefaultSourceGroups)
 include_directories (
   .
   ./include
-  ${VULKAN_INCLUDE_DIR}
+  ${Vulkan_INCLUDE_DIRS}
+  ${GLM_INCLUDE_DIR}
   #${IMGUI_INCLUDE_PATH}
 )
 
@@ -132,7 +134,7 @@ set(ALL_SOURCE_FILES
 #add_library(${CURRENT_MODULE_NAME} SHARED ${SOURCE_FILES})
 
 COFFEESetDefaultSourceGroups("${PUBLIC_HEADER_FILES}" "${PRIVATE_HEADER_FILES}" "${SOURCE_FILES}")
-COFFEEAddSharedLibrary(${CURRENT_MODULE_NAME} "presentation" GFX_DEVICE "${PUBLIC_HEADER_FILES}" "${PRIVATE_HEADER_FILES}" "${ALL_SOURCE_FILES}")
+COFFEEAddSharedLibrary(${CURRENT_MODULE_NAME} "presentation" VORTEXCORE "${PUBLIC_HEADER_FILES}" "${PRIVATE_HEADER_FILES}" "${ALL_SOURCE_FILES}")
 
 
 target_link_libraries (${CURRENT_MODULE_NAME}
