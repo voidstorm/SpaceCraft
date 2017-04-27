@@ -3,11 +3,18 @@ set (CURRENT_MODULE_NAME  vortexcore)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
 
 list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/glm")
+list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/gli")
+list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/imgui")
+
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 
 find_package(Vulkan)
 find_package(GLM)
+find_package(GLI)
+find_package(ImGui)
+
 
 if (ENABLE_DIRECTX)
   find_package(DirectX)
@@ -38,11 +45,13 @@ function(COFFEEAddSharedLibrary TARGET_NAME MODULE_FOLDER MODULE_DEFINE PUBLIC_H
 endfunction(COFFEEAddSharedLibrary)
 
 
-function(COFFEESetDefaultSourceGroups PUBLIC_HEADER_FILES PRIVATE_HEADER_FILES SOURCE_FILES)
+function(COFFEESetDefaultSourceGroups PUBLIC_HEADER_FILES PRIVATE_HEADER_FILES SOURCE_FILES SOURCE_FILES_WIN32)
 
   source_group("header\\public"          FILES ${PUBLIC_HEADER_FILES})
   source_group("header\\private"         FILES ${PRIVATE_HEADER_FILES})
   source_group("source"                  FILES ${SOURCE_FILES})
+  source_group("source\\win32"           FILES ${SOURCE_FILES_WIN32})
+  
 
 endfunction(COFFEESetDefaultSourceGroups)
 
@@ -51,7 +60,8 @@ include_directories (
   ./include
   ${Vulkan_INCLUDE_DIRS}
   ${GLM_INCLUDE_DIR}
-  #${IMGUI_INCLUDE_PATH}
+  ${GLI_INCLUDE_DIR}
+  ${IMGUI_INCLUDE_DIR}
 )
 
 
@@ -107,6 +117,10 @@ set(SOURCE_FILES
   src/VortexCore.cpp
 )
 
+set(SOURCE_FILES_WIN32
+  src/win32/OSAppWindow.cpp
+)
+
 
 if (WIN32)
   if (ENABLE_DIRECTX)
@@ -122,19 +136,24 @@ set(TEST_FILES
 )
 
 
-#add_definitions(-DHAVE_IGT_MULTI_TOUCH_CLIENT)
+add_definitions(-D_UNICODE -DUNICODE )
 
 
 set(ALL_SOURCE_FILES
   ${SOURCE_FILES}
   ${TEST_FILES}
+  ${SOURCE_FILES_WIN32}
+  ${IMGUI_LIBRARY}  
 )
 
 
 #add_library(${CURRENT_MODULE_NAME} SHARED ${SOURCE_FILES})
 
-COFFEESetDefaultSourceGroups("${PUBLIC_HEADER_FILES}" "${PRIVATE_HEADER_FILES}" "${SOURCE_FILES}")
+source_group("source\\imgui"           FILES ${IMGUI_LIBRARY})
+
+COFFEESetDefaultSourceGroups("${PUBLIC_HEADER_FILES}" "${PRIVATE_HEADER_FILES}" "${SOURCE_FILES}" "${SOURCE_FILES_WIN32}")
 COFFEEAddSharedLibrary(${CURRENT_MODULE_NAME} "presentation" VORTEXCORE "${PUBLIC_HEADER_FILES}" "${PRIVATE_HEADER_FILES}" "${ALL_SOURCE_FILES}")
+
 
 
 target_link_libraries (${CURRENT_MODULE_NAME}

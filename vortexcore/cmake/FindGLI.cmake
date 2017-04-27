@@ -11,13 +11,13 @@
 
 include(FindPackageHandleStandardArgs)
 
-find_path(GLM_INCLUDE_DIR glm/glm.hpp)
-SET(GLM_LIBRARY "")
+find_path(GLI_INCLUDE_DIR gli/gli.hpp)
+SET(GLI_LIBRARY "")
 
-if(GLM_INCLUDE_DIR)
-    set(GLM_FOUND TRUE)
+if(GLI_INCLUDE_DIR)
+    set(GLI_FOUND TRUE)
 endif()
 
-find_package_handle_standard_args(GLM DEFAULT_MSG GLM_INCLUDE_DIR GLM_LIBRARY)
+find_package_handle_standard_args(GLI DEFAULT_MSG GLI_INCLUDE_DIR GLI_LIBRARY)
 
-mark_as_advanced(GLM_INCLUDE_DIR GLM_LIBRARY)
+mark_as_advanced(GLI_INCLUDE_DIR GLI_LIBRARY)

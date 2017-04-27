@@ -1,7 +1,7 @@
-#include "..\include\VortexCore\Game.h"
-#include "..\include\VortexCore\SceneManager.h"
-#include "..\include\VortexCore\RenderContext.h"
-#include "..\include\VortexCore\AppWindow.h"
+#include "VortexCore\Game.h"
+#include "VortexCore\SceneManager.h"
+#include "VortexCore\RenderContext.h"
+#include "VortexCore\AppWindow.h"
 
 #include <chrono>
 #include <thread>
