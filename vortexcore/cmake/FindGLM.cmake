@@ -18,6 +18,6 @@ if(GLM_INCLUDE_DIR)
     set(GLM_FOUND TRUE)
 endif()
 
-find_package_handle_standard_args(GLM DEFAULT_MSG GLM_INCLUDE_DIR GLM_LIBRARY)
+find_package_handle_standard_args(GLM DEFAULT_MSG GLM_INCLUDE_DIR)
 
 mark_as_advanced(GLM_INCLUDE_DIR GLM_LIBRARY)
