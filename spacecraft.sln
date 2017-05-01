@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vortexcore", "vortexcore\build_x64\vortexcore.vcxproj", "{60E7D858-602B-38B0-87FA-8D3C499B2AE1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "spacecraft", "spacecraft\build_x64\spacecraft.vcxproj", "{8132A36A-3199-3B00-AE71-2283FB490117}"
+	ProjectSection(ProjectDependencies) = postProject
+		{60E7D858-602B-38B0-87FA-8D3C499B2AE1} = {60E7D858-602B-38B0-87FA-8D3C499B2AE1}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
