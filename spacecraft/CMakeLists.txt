@@ -6,15 +6,18 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../vortexcore/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
 
 
+list(APPEND CMAKE_INCLUDE_PATH "../vortexcore/include")
+list(APPEND CMAKE_LIBRARY_PATH "../vortexcore/lib")
+
 include(AddDeps)
 
 find_package(GLM)
-
+find_package(Vortexcore)
 
 include_directories (
   .
   ./include
-  ../vortexcore/include
+  ${VORTEXCORE_INCLUDE_DIR}
   ${GLM_INCLUDE_DIR}
 )
 
@@ -32,9 +35,29 @@ set (PUBLIC_HEADER_FILES
 )
 
 COFFEEAddExecutableWithOptions(${CURRENT_MODULE_NAME} "" "WIN32" "${PUBLIC_HEADER_FILES}" "${PRIVATE_HEADER_FILES}" "${SOURCE_FILES}")
-COFFEESetDefaultSourceGroups("${PUBLIC_HEADER_FILES}" "${PRIVATE_HEADER_FILES}" "${SOURCE_FILES}")
+COFFEESetDefaultSourceGroups("${PUBLIC_HEADER_FILES}" "${PRIVATE_HEADER_FILES}" "${SOURCE_FILES}" "")
 
+
+set_target_properties( ${CURRENT_MODULE_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_LIST_DIR}/bin/debug" )
+set_target_properties( ${CURRENT_MODULE_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_LIST_DIR}/bin/release" )
+
+set_target_properties( ${CURRENT_MODULE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_LIST_DIR}/bin/debug" )
+set_target_properties( ${CURRENT_MODULE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_LIST_DIR}/bin/release" )
+
+set_target_properties( ${CURRENT_MODULE_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_LIST_DIR}/lib/debug" )
+set_target_properties( ${CURRENT_MODULE_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_LIST_DIR}/lib/release" )
+
+set_target_properties( ${CURRENT_MODULE_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_LIST_DIR}/lib/debug" )
+set_target_properties( ${CURRENT_MODULE_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_LIST_DIR}/lib/release" )
+
+set(CMAKE_CFG_INTDIR "$<$<CONFIG:Debug>:${CMAKE_CURRENT_LIST_DIR}/obj/debug>"
+                     "$<$<CONFIG:Release>:${CMAKE_CURRENT_LIST_DIR}/obj/release>"
+)
+
+add_definitions(-D_UNICODE -DUNICODE )
 
 target_link_libraries (${CURRENT_MODULE_NAME}
-  vortexcore
+  ${VORTEXCORE_LIBRARY}
 )
+
+add_custom_command(TARGET ${CURRENT_MODULE_NAME} POST_BUILD COMMAND "${CMAKE_CURRENT_LIST_DIR}/update_dlls.bat" WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}")

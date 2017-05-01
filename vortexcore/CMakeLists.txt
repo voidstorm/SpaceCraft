@@ -111,9 +111,6 @@ set(TEST_FILES
 )
 
 
-add_definitions(-D_UNICODE -DUNICODE )
-
-
 set(ALL_SOURCE_FILES
   ${SOURCE_FILES}
   ${TEST_FILES}
@@ -144,6 +141,9 @@ set_target_properties( ${CURRENT_MODULE_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTOR
 set(CMAKE_CFG_INTDIR "$<$<CONFIG:Debug>:${CMAKE_CURRENT_LIST_DIR}/obj/debug>"
                      "$<$<CONFIG:Release>:${CMAKE_CURRENT_LIST_DIR}/obj/release>"
 )
+
+add_definitions(-D_UNICODE -DUNICODE )
+
 
 target_link_libraries (${CURRENT_MODULE_NAME}
   ${Vulkan_LIBRARY}
