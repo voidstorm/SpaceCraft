@@ -1,0 +1,30 @@
+#
+# Try to find ImGui library and include path.
+# Once done this will define
+#
+# BULLET_PHYSICS_FOUND
+# BULLET_PHYSICS_INCLUDE_PATH
+# BULLET_PHYSICS_LIBRARY
+#
+include(FindLibraryDebugRelease)
+
+IF (BULLET_PHYSICS_LIBRARY AND BULLET_PHYSICS_INCLUDE_PATH)
+  SET(BULLET_PHYSICS_FOUND TRUE)
+ELSE ()
+  FIND_PATH(BULLET_PHYSICS_COMMON_INCLUDE_PATH btBulletDynamicsCommon.h)
+  FIND_PATH(BULLET_PHYSICS_CONVEX_DECOMPOSITION_INCLUDE_PATH ConvexDecomposition.h)
+  FIND_PATH(BULLET_PHYSICS_COLLISION_DISPATCH_INCLUDE_PATH btGhostObject.h)
+  
+  find_library_debug_release(BULLET_PHYSICS_DYNAMICS_LIBRARY "BulletDynamics;BulletDynamics_Debug")
+  find_library_debug_release(BULLET_PHYSICS_COLLISION_LIBRARY "BulletCollision;BulletCollision_Debug")
+  find_library_debug_release(BULLET_PHYSICS_LINEAR_MATH_LIBRARY "LinearMath;LinearMath_Debug")
+  find_library_debug_release(BULLET_PHYSICS_CONVEX_DECOMPOSITION_LIBRARY "ConvexDecomposition;ConvexDecomposition_Debug")
+
+
+  IF (BULLET_PHYSICS_LIBRARY AND BULLET_PHYSICS_INCLUDE_PATH)
+    SET(BULLET_PHYSICS_FOUND TRUE)
+  ENDIF()
+ENDIF ()
+
+MARK_AS_ADVANCED(BULLET_PHYSICS_LIBRARY BULLET_PHYSICS_INCLUDE_PATH)
+

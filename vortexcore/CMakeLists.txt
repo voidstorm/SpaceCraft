@@ -10,6 +10,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
 list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/glm")
 list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/gli")
 list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/imgui")
+list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/assimp")
+list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/assimp/include")
+list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/bullet3/src")
+
+
+list(APPEND CMAKE_LIBRARY_PATH "../3rdparty/assimp/build_x64/code")
+list(APPEND CMAKE_LIBRARY_PATH "../3rdparty/bullet3/build_cmake/lib")
 
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -19,7 +26,8 @@ find_package(Vulkan)
 find_package(GLM)
 find_package(GLI)
 find_package(ImGui)
-
+find_package(assimp)
+find_package(BulletPhysics)
 
 if (ENABLE_DIRECTX)
   find_package(DirectX)
@@ -67,6 +75,8 @@ include_directories (
   ${GLM_INCLUDE_DIR}
   ${GLI_INCLUDE_DIR}
   ${IMGUI_INCLUDE_DIR}
+  ${ASSIMP_INCLUDE_DIR}
+  ${BULLET_PHYSICS_COMMON_INCLUDE_PATH}
 )
 
 
@@ -191,7 +201,9 @@ set(CMAKE_CFG_INTDIR "$<$<CONFIG:Debug>:${CMAKE_CURRENT_LIST_DIR}/obj/debug>"
 )
 
 target_link_libraries (${CURRENT_MODULE_NAME}
-  ${Vulkan_LIBRARY}  
+  ${Vulkan_LIBRARY}
+  ${ASSIMP_LIBRARY}
+  ${BULLET_PHYSICS_DYNAMICS_LIBRARY}
 )
 
 if (ENABLE_DIRECTX)
