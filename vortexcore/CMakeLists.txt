@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.7)
 set (CURRENT_MODULE_NAME  vortexcore)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
-
+project(vortexcore)
 
 #directory settings
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 
 include(AddDeps)

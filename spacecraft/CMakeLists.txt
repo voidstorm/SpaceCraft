@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.7)
+project(spacecraft)
 set (CURRENT_MODULE_NAME  spacecraft)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../vortexcore/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../vortexcore/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
 
 
 list(APPEND CMAKE_INCLUDE_PATH "../vortexcore/include")
