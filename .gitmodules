@@ -16,3 +16,6 @@
 [submodule "3rdparty/steamaudio"]
 	path = 3rdparty/steamaudio
 	url = https://github.com/voidstorm/steam-audio.git
+[submodule "3rdparty/protobuf"]
+	path = 3rdparty/protobuf
+	url = https://github.com/voidstorm/protobuf.git
