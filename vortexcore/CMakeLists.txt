@@ -18,6 +18,7 @@ find_package(ImGui)
 find_package(assimp)
 find_package(BulletPhysics)
 find_package(SteamAudio)
+find_package(ProtoBuf)
 
 if (ENABLE_DIRECTX)
   find_package(DirectX)
@@ -150,6 +151,8 @@ target_link_libraries (${CURRENT_MODULE_NAME}
   ${Vulkan_LIBRARY}
   ${ASSIMP_LIBRARY}
   ${BULLET_PHYSICS_DYNAMICS_LIBRARY}
+  ${PROTOBUF_LIBRARY}
+  ${STEAMAUDIO_LIBRARY}  
 )
 
 if (ENABLE_DIRECTX)
