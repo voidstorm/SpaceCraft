@@ -12,9 +12,9 @@
 include(FindPackageHandleStandardArgs)
 include(FindLibraryDebugRelease)
 
-find_path(PROTOBUF_INCLUDE_DIR glm/glm.hpp)
+find_path(PROTOBUF_INCLUDE_DIR protobuf/any.pb.h)
 
-find_library_debug_release(PROTOBUF_LIBRARY "assimp-vc140-mt")
+find_library_debug_release(PROTOBUF_LIBRARY "libprotobufd;libprotobuf")
 
 if(PROTOBUF_INCLUDE_DIR)
     set(PROTOBUF_FOUND TRUE)
