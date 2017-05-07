@@ -17,6 +17,7 @@ find_package(GLI)
 find_package(ImGui)
 find_package(assimp)
 find_package(BulletPhysics)
+find_package(SteamAudio)
 
 if (ENABLE_DIRECTX)
   find_package(DirectX)

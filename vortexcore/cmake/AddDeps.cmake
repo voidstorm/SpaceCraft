@@ -4,10 +4,12 @@ list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/imgui")
 list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/assimp")
 list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/assimp/include")
 list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/bullet3/src")
+list(APPEND CMAKE_INCLUDE_PATH "../3rdparty/steamaudio/include")
 
 
 list(APPEND CMAKE_LIBRARY_PATH "../3rdparty/assimp/build_x64/code")
 list(APPEND CMAKE_LIBRARY_PATH "../3rdparty/bullet3/build_cmake/lib")
+list(APPEND CMAKE_LIBRARY_PATH "../3rdparty/steamaudio/lib/Windows/x64")
 
 
 function(COFFEEAddSharedLibrary TARGET_NAME MODULE_FOLDER MODULE_DEFINE PUBLIC_HEADER_FILES PRIVATE_HEADER_FILES SOURCE_FILES)
