@@ -68,9 +68,11 @@ std::future<int> Vt::Game::start() {
         while ( !mRunning ) {
             //wait for window to show
         }
-        //gameloop
         auto now = std::chrono::high_resolution_clock::now();
         auto dur = std::chrono::high_resolution_clock::now() - now;
+        //start other concurrent loops...
+
+        //gameloop
         while ( mRunning ) {
             mLastTick = now;
             loop(dur = ( now = std::chrono::high_resolution_clock::now() ) - mLastTick);
