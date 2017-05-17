@@ -63,6 +63,7 @@ set(PUBLIC_HEADER_FILES
   include/VortexCore/ScopedTimer.h
   include/VortexCore/ScopedWaitTimer.h
   include/VortexCore/ThreadContext.h
+  include/VortexCore/ThreadMap.h  
   include/VortexCore/Transform.h
   include/VortexCore/Transform.h
   include/VortexCore/TransformCache.h

@@ -69,7 +69,10 @@ namespace Vt {
           case WM_PAINT:
             if ( !close_ )
               onPaint();
+            return TRUE;
             break;
+          case WM_ERASEBKGND:
+            return TRUE;
           case WM_CREATED:
           {
             onCreate();

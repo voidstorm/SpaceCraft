@@ -10,13 +10,14 @@
 
 int main(int argc, char** argv) {
   VT_DO_LEAK_CHECK;
+  //default framebuffer
   Vt::Gfx::RenderContextLayout rcl = {
-      1280,    //width
+      1280,   //width
       720,    //height
       0,      //screen
       false,  //fullscreen
-      24,     //depthbuffer
-      8,      //stencil
+      0,      //depthbuffer
+      0,      //stencil
       0       //multisample
   };
 
