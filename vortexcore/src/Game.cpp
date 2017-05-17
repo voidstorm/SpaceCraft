@@ -67,7 +67,7 @@ void Vt::Game::loop(const std::chrono::high_resolution_clock::duration & delta) 
 
 std::future<int> Vt::Game::start() {
   return std::async(std::launch::async, [this]()->int {
-    Vt::SetThreadMapping(Vt::ThreadMapping::TM_GAME_LOOP);
+    Vt::SetThreadMapping(Vt::ThreadMapping.TM_GAME_LOOP);
     while (!mRunning) {
       //wait for window to show
     }

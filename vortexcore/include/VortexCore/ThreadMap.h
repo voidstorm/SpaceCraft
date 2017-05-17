@@ -1,13 +1,28 @@
 #pragma once
 #include <Windows.h>
+#include <functional>
 
 namespace Vt {
-  enum class ThreadMapping : unsigned {
-     TM_WINDOW_LOOP= 0
-    ,TM_GAME_LOOP= 1
-  };
+  struct ThreadMapping_t {
+    ThreadMapping_t() {
+      //core i7
+      if (true) {
+        TM_WINDOW_LOOP = 0;
+        TM_GAME_LOOP = 1;
+      } else {
+        //ryzen
 
-  inline void SetThreadMapping(ThreadMapping m) {
-    SetThreadIdealProcessor(GetCurrentThread(), static_cast<unsigned>(m));
+      }
+    }
+
+    ~ThreadMapping_t() = default;
+
+    unsigned TM_WINDOW_LOOP = 0;
+    unsigned TM_GAME_LOOP = 1;
+
+  } ThreadMapping;
+
+  inline void SetThreadMapping(const unsigned mapping) {
+    SetThreadIdealProcessor(GetCurrentThread(), mapping);
   }
 }
