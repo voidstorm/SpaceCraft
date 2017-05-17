@@ -3,7 +3,8 @@
 
 namespace Vt {
   enum class ThreadMapping : unsigned {
-    TM_GAME_LOOP= 1
+     TM_WINDOW_LOOP= 0
+    ,TM_GAME_LOOP= 1
   };
 
   inline void SetThreadMapping(ThreadMapping m) {

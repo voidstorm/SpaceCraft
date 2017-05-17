@@ -3,6 +3,7 @@
 #include "VortexCore\AppWindow.h"
 #include "VortexCore\Game.h"
 #include "VortexCore\RenderContext.h"
+#include "VortexCore\ThreadMap.h"
 
 #include <iostream>
 #include <exception>
@@ -10,6 +11,7 @@
 
 int main(int argc, char** argv) {
   VT_DO_LEAK_CHECK;
+  Vt::SetThreadMapping(Vt::ThreadMapping::TM_WINDOW_LOOP);
   //default framebuffer
   Vt::Gfx::RenderContextLayout rcl = {
       1280,   //width
