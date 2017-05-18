@@ -8,8 +8,9 @@
 //The render contextmanages resources such as swapchains and all window/platform related stuff...
 
 namespace Vt {
-
   namespace Gfx {
+    class RenderContextVulkan;
+
     struct RenderContextLayout {
       int width;
       int height;
@@ -34,6 +35,7 @@ namespace Vt {
       virtual void resizeSwapChain(unsigned width, unsigned height);
 
     private:
+      std::unique_ptr<RenderContextVulkan> mVkContext;
       std::shared_ptr<Vt::App::AppWindow> mWindow;
       RenderContextLayout mLayout;
     };

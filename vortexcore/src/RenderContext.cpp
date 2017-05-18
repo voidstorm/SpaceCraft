@@ -1,10 +1,12 @@
 #include "..\include\VortexCore\RenderContext.h"
-#include "vulkan\vulkan.h"
+#include "..\include\VortexCore\private\RenderContextVulkan.h"
+
 
 
 Vt::Gfx::RenderContext::RenderContext(const std::shared_ptr<Vt::App::AppWindow> &window,const RenderContextLayout &layout):
 	 mWindow(window)
-  ,mLayout(layout) {
+  ,mLayout(layout)
+  {
 }
 
 

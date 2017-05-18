@@ -63,6 +63,7 @@ int Vt::Game::shutdown() {
 }
 
 void Vt::Game::loop(const std::chrono::high_resolution_clock::duration & delta) {
+
 }
 
 std::future<int> Vt::Game::start() {
@@ -81,13 +82,14 @@ std::future<int> Vt::Game::start() {
     //gameloop
     while (mRunning) {
       mLastTick = now;
-      loop(dur = (now = std::chrono::high_resolution_clock::now()) - mLastTick);
+      loop(dur = ((now = std::chrono::high_resolution_clock::now()) - mLastTick));
 #ifdef VT_TIMING
-      if (mCounter < 100) {
-        mTiming += (double)std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1, 1000>>>(dur).count();
+      if (mCounter < 100 || mTiming < 1000) {
+        mTiming+= (double)std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1, 1000>>>(dur).count();
         mCounter++;
       } else {
-        std::cout << "[VT_TIMING]  Vt::Game::loop: " << (mTiming / double(mCounter)) << " milliseconds" << std::endl;
+        auto ms = (mTiming / double(mCounter));
+        std::cout << "[VT_TIMING]  Vt::Game::loop: " << ms << " milliseconds, " << 1000.0 / ms << "fps" << std::endl;
         mCounter = 0;
         mTiming = 0.0;
       }

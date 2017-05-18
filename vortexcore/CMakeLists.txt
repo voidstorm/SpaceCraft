@@ -74,6 +74,7 @@ set(PRIVATE_HEADER_FILES
   include/VortexCore/private/Camera.h
   include/VortexCore/private/Frustum.h
   include/VortexCore/private/Mesh.h
+  include/VortexCore/private/RenderContextVulkan.h
 )
 
 set(SOURCE_FILES
