@@ -7,6 +7,8 @@ project(vortexcore)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+#  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+#  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 
 include(AddDeps)
 
@@ -53,6 +55,7 @@ set(PUBLIC_HEADER_FILES
   include/VortexCore/Delegate.h
   include/VortexCore/Game.h
   include/VortexCore/ForwardDecls.h
+  include/VortexCore/Logger.h
   include/VortexCore/Material.h
   include/VortexCore/MeshComponent.h
   include/VortexCore/RenderContext.h
@@ -103,11 +106,7 @@ set(SOURCE_FILES_WIN32
 
 
 if (WIN32)
-  if (ENABLE_DIRECTX)
-    set(SOURCE_FILES
-    ${SOURCE_FILES}
-    src/common/gfx_device_dx11.cpp)
-  endif()
+   add_definitions("-DVK_USE_PLATFORM_WIN32_KHR")
 endif()
 
 

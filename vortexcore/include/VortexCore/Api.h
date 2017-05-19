@@ -21,7 +21,12 @@
 
 //VERBOSE
 #include <iostream>
-#define V(x) std::cout << x << " in file: "<< __FILE__ " at line: " << __LINE__ << std::endl
+#include <string>
+//#define V(x) std::cout << x << " in file: "<< __FILE__ " at line: " << __LINE__ << std::endl
+
+#define VT_EXCEPT(x, msg) throw x(std::string("Exception in file: ") + std::string(__FILE__) + std::string(" in line: ") + std::to_string(__LINE__) + std::string(" -> ") + std::string(msg) + std::string("\n"))
+#define VT_EXCEPT_RT(x, msg, e) throw x(std::string("Exception in file: ") + std::string(__FILE__) + std::string(" in line: ") + std::to_string(__LINE__) + std::string(" -> ") + std::string(msg) + std::string("\n") + e.what())
+
 
 //D3D DEBUG MACROS
 #define D3D_DEBUG
