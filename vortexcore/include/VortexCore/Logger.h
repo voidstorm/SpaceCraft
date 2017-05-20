@@ -38,7 +38,7 @@ public:
    }
 
    template<class... Args>
-   void log(LogLevel level, const std::string &msg, Args... args ) {
+   void log(LogLevel level, const std::string &msg, Args... &&args ) {
       std::lock_guard<decltype(mMutex)> lock(mMutex);
       if (mLog.is_open()) {
          snprintf(mBuffer.data(), MAX_LINE_LEN, msg.c_str(), args...);
@@ -57,10 +57,21 @@ public:
       }
    }
 
-   static Logger & getInstance() {
-      static Logger l("vt.log");
-      return l;
+   template<class... Args>
+   void info(const std::string &msg, Args... &&args) {
+      log(LogLevel::LOG_INFO, args...);
    }
+
+   template<class... Args>
+   void warn(const std::string &msg, Args... &&args) {
+      log(LogLevel::LOG_WARNING, args...);
+   }
+
+   template<class... Args>
+   void error(const std::string &msg, Args... &&args) {
+      log(LogLevel::LOG_ERROR, args...);
+   }
+
 private:
    std::array<char, MAX_LINE_LEN> mBuffer;
    std::recursive_mutex mMutex;

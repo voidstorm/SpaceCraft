@@ -5,7 +5,7 @@
 #include <exception>
 #include "vulkan\vulkan.h"
 
-#include "..\Logger.h"
+#include "..\SystemLogger.h"
 
 
 namespace Vt {
@@ -115,7 +115,7 @@ class RenderContextVulkan {
             return nullptr;
          }
 
-         Logger::getInstance().log(LogLevel::LOG_INFO, "Vulkan instance created with result %d", (int)result);
+         SystemLogger::get().info("Vulkan instance created with result %d", (int)result);
 
          return instance;
       };
