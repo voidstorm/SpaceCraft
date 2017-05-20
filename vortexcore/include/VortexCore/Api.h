@@ -28,6 +28,14 @@
 #define VT_EXCEPT_RT(x, msg, e) throw x(std::string("Exception in file: ") + std::string(__FILE__) + std::string(" in line: ") + std::to_string(__LINE__) + std::string(" -> ") + std::string(msg) + std::string("\n") + e.what())
 
 
+#define VK_CHECK_RESULT(x) \
+{ \
+   auto result = (x); \
+      if (result != VkResult::VK_SUCCESS) { \
+         SystemLogger::get().info("Failed to create instance with error: %s", VkErrorHelper::vkResultToStr(result).c_str()); \
+      } \
+} 
+
 //D3D DEBUG MACROS
 #define D3D_DEBUG
 

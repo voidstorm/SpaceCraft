@@ -23,7 +23,14 @@ void Vt::Gfx::RenderContext::init() {
       settings.mValidation = RenderContextVulkanSettings::ValidationFlags::NONE;
 #endif
       try {
+         //first we create a vulkan instance
          mVkContext = std::unique_ptr<RenderContextVulkan>(new RenderContextVulkan(settings));
+         if (mVkContext) {
+            //we find a suitable vulkan device
+            auto physical_device= mVkContext->enumerateAndSelectDevice(Vt::Gfx::DeviceSelectionVulkan::AUTO_SELECT);
+            //next we create a logical device
+
+         }
       } catch (const std::exception& e) {
          VT_EXCEPT_RT(RenderContextException, "RenderContext::init: Could not init render context!", e);
       }

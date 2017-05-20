@@ -1,15 +1,18 @@
 #pragma once
-#include "CommandQueue.h"
 #include <thread>
 #include <memory>
 #include <atomic>
 
+#include "CommandQueue.h"
+#include "ThreadMap.h"
+
+
 
 namespace Vt {
 	//---------------------------------------------------------------------------------------
-	class ThreadContext {
+   class ThreadContext final {
 	public:
-		ThreadContext();
+		ThreadContext(const unsigned mapping);
 		~ThreadContext();
 		CommandQueue& GetCommandQueue();
 	private:
@@ -19,8 +22,9 @@ namespace Vt {
 	};
 
 	//---------------------------------------------------------------------------------------
-	ThreadContext::ThreadContext() {
+	ThreadContext::ThreadContext(const unsigned mapping) {
 		m_work_thread = std::make_unique<std::thread>([&]() {
+         SetThreadMapping(mapping);
 			while (m_running) {
 				//can take a context param, e.g. the opengl or thread context.
 				while (m_work_items.isWaitingForWork()) {

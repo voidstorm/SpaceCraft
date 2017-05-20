@@ -98,6 +98,18 @@ public:
       return "UNKNOWN VKRESULT";
    }
 
+   static std::string physicalDeviceTypeToStr(VkPhysicalDeviceType type) {
+      switch (type) {
+#define VT_STR(r) case VK_PHYSICAL_DEVICE_TYPE_ ##r: return #r
+         VT_STR(OTHER);
+         VT_STR(INTEGRATED_GPU);
+         VT_STR(DISCRETE_GPU);
+         VT_STR(VIRTUAL_GPU);
+#undef STR
+         default: return "UNKNOWN_DEVICE_TYPE";
+      }
+   }
+
 };
 
 

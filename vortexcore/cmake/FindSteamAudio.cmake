@@ -14,7 +14,7 @@ include(FindLibraryDebugRelease)
 
 find_path(STEAMAUDIO_INCLUDE_DIR phonon.h)
 
-find_library_debug_release(STEAMAUDIO_LIBRARY "phonons")
+find_library_debug_release(STEAMAUDIO_LIBRARY "phonon")
 
 if(STEAMAUDIO_INCLUDE_DIR)
     set(STEAMAUDIO_FOUND TRUE)
