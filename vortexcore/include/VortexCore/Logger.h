@@ -51,7 +51,7 @@ public:
             localtime_s(&newtime, &time_c);
             ss << std::put_time(&newtime, "%F %T")
                << (level == LogLevel::LOG_INFO ? " [INFO] " : 
-                   level == LogLevel::LOG_WARNING ? " [WARN] " : " [ERROR] ")
+                   level == LogLevel::LOG_WARNING ? " [WARNING] " : " [ERROR] ")
                << mBuffer.data()
                << std::endl;
             mLog << ss.str();
