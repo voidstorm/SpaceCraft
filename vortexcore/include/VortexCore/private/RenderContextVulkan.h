@@ -38,11 +38,12 @@ enum class DeviceSelectionVulkan : unsigned {
 };
 
 struct DevicePropertiesVulkan {
+   uint32_t mQueueFamilyCount = 0;
    VkPhysicalDeviceProperties mDeviceProperties{};
    VkPhysicalDeviceFeatures mDeviceFeatures{};
    VkPhysicalDeviceMemoryProperties mDeviceMemoryProperties{};
    std::vector<VkQueueFamilyProperties> mDeviceQueueFamilyProperties;
-   uint32_t mQueueFamilyCount= 0;
+   std::vector<std::string> mExtensions;
 };
 
 class RenderContextVulkan {
@@ -196,7 +197,6 @@ class RenderContextVulkan {
          mDeviceProperties.mDeviceMemoryProperties = device_memory_properties;
          mDeviceProperties.mDeviceQueueFamilyProperties = device_queue_family_properties;
          mDeviceProperties.mQueueFamilyCount = queue_family_count;
-
       }
       //auto select most suitable gpu available
       //atm we select a discret gpu if available
@@ -215,7 +215,20 @@ class RenderContextVulkan {
             device_queue_family_properties.resize(queue_family_count);
             vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, device_queue_family_properties.data());
 
-            logAdapterProperties(device_properties, device_queue_family_properties, device_features, device_memory_properties);
+            //enumerate and store extensions supported by selected device
+            uint32_t ext_count = 0;
+            std::vector<std::string> extension_names;
+            vkEnumerateDeviceExtensionProperties(device, nullptr, &ext_count, nullptr);
+            if (ext_count > 0) {
+               std::vector<VkExtensionProperties> extensions(ext_count);
+               if (vkEnumerateDeviceExtensionProperties(device, nullptr, &ext_count, extensions.data()) == VK_SUCCESS) {
+                  for (auto ext : extensions) {
+                     extension_names.push_back(ext.extensionName);
+                  }
+               }
+            }
+
+            logAdapterProperties(device_properties, device_queue_family_properties, device_features, device_memory_properties, extension_names);
 
             if (selected_device == nullptr) {
                mDeviceProperties.mDeviceProperties = device_properties;
@@ -223,6 +236,7 @@ class RenderContextVulkan {
                mDeviceProperties.mDeviceMemoryProperties = device_memory_properties;
                mDeviceProperties.mDeviceQueueFamilyProperties = device_queue_family_properties;
                mDeviceProperties.mQueueFamilyCount = queue_family_count;
+               mDeviceProperties.mExtensions = extension_names;
                selected_device = device;
             } else {
                if (  mDeviceProperties.mDeviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && 
@@ -232,13 +246,24 @@ class RenderContextVulkan {
                   mDeviceProperties.mDeviceMemoryProperties = device_memory_properties;
                   mDeviceProperties.mDeviceQueueFamilyProperties = device_queue_family_properties;
                   mDeviceProperties.mQueueFamilyCount = queue_family_count;
+                  mDeviceProperties.mExtensions = extension_names;
                   selected_device = device;
                }
             }
          }
       }
       SystemLogger::get().info("Selected Adapter: %s Id:  %x", mDeviceProperties.mDeviceProperties.deviceName, mDeviceProperties.mDeviceProperties.deviceID);
+      if (!mDeviceProperties.mQueueFamilyCount) {
+         VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::enumerateAndSelectDevice: Could find a vulkan capable device!");
+      }
       return mPhysicalDevice= selected_device;
+   }
+
+   //-----------------------------------------------------------------
+   // Creates a logical device
+   VkDevice createDevice(const VkPhysicalDevice device) {
+      //VK_CHECK_RESULT()
+      return nullptr;
    }
 
    //-----------------------------------------------------------------
@@ -246,7 +271,8 @@ class RenderContextVulkan {
    void logAdapterProperties( const VkPhysicalDeviceProperties & device_properties, 
                               const std::vector<VkQueueFamilyProperties> & queue_properties,
                               const VkPhysicalDeviceFeatures & features,
-                              const VkPhysicalDeviceMemoryProperties & memory_info) {
+                              const VkPhysicalDeviceMemoryProperties & memory_info,
+                              const std::vector<std::string> & extensions) {
 
       SystemLogger::get().info("--------------------------------------------");
       SystemLogger::get().info("Detailed Device Properties");
@@ -256,7 +282,7 @@ class RenderContextVulkan {
       int count = 0;
       for (auto & prop : queue_properties) {
          SystemLogger::get().info("--------------------------------------------");
-         SystemLogger::get().info("Queue family no. %d", count++);
+         SystemLogger::get().info("Queue family idx. %d", count++);
          SystemLogger::get().info("Queue count: %d", prop.queueCount);
          SystemLogger::get().info("minImageTransferGranularity width: %d", prop.minImageTransferGranularity.width);
          SystemLogger::get().info("minImageTransferGranularity height: %d", prop.minImageTransferGranularity.height);
@@ -270,7 +296,7 @@ class RenderContextVulkan {
       SystemLogger::get().info("MEMORY PROPERTIES");
       SystemLogger::get().info("memoryTypeCount: %d", memory_info.memoryTypeCount);
       SystemLogger::get().info("Memory types:");
-      for (int i = 0; i < memory_info.memoryTypeCount; ++i) {
+      for (unsigned i = 0; i < memory_info.memoryTypeCount; ++i) {
          SystemLogger::get().info("--------------------------------------------");
          SystemLogger::get().info("heapIndex: %d", memory_info.memoryTypes[i].heapIndex);
          SystemLogger::get().info("VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT: %s", memory_info.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT ? "YES" : "NO");
@@ -282,7 +308,7 @@ class RenderContextVulkan {
       SystemLogger::get().info("--------------------------------------------");
       SystemLogger::get().info("memoryHeapCount: %d", memory_info.memoryHeapCount);
       SystemLogger::get().info("Memory Heaps:");
-      for (int i = 0; i < memory_info.memoryHeapCount; ++i) {
+      for (unsigned i = 0; i < memory_info.memoryHeapCount; ++i) {
          SystemLogger::get().info("size: %u MB", (unsigned)(memory_info.memoryHeaps[i].size / (1024LL* 1024LL)));
          SystemLogger::get().info("VK_MEMORY_HEAP_DEVICE_LOCAL_BIT: %s", memory_info.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT ? "YES" : "NO");
          SystemLogger::get().info("VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHX: %s", memory_info.memoryHeaps[i].flags & VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHX ? "YES" : "NO");
@@ -346,6 +372,12 @@ class RenderContextVulkan {
       SystemLogger::get().info("variableMultisampleRate: %s",features.variableMultisampleRate ? "YES" : "NO");
       SystemLogger::get().info("inheritedQueries: %s",features.inheritedQueries ? "YES" : "NO");
       SystemLogger::get().info("--------------------------------------------");
+      SystemLogger::get().info("SUPPORTED EXTENSIONS");
+
+      //extensions
+      for (auto & ext : extensions) {
+         SystemLogger::get().info("%s", ext.c_str());
+      }
    }
 
 

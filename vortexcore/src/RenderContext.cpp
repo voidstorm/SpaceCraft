@@ -29,7 +29,9 @@ void Vt::Gfx::RenderContext::init() {
             //we find a suitable vulkan device
             auto physical_device= mVkContext->enumerateAndSelectDevice(Vt::Gfx::DeviceSelectionVulkan::AUTO_SELECT);
             //next we create a logical device
-
+            if (physical_device) {
+               mVkContext->createDevice(physical_device);
+            }
          }
       } catch (const std::exception& e) {
          VT_EXCEPT_RT(RenderContextException, "RenderContext::init: Could not init render context!", e);
