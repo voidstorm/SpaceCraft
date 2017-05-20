@@ -200,6 +200,7 @@ class RenderContextVulkan {
                mDeviceProperties.mDeviceProperties = device_properties;
                mDeviceProperties.mDeviceFeatures = device_features;
                mDeviceProperties.mDeviceMemoryProperties = device_memory_properties;
+               mDeviceProperties.mDeviceQueueFamilyProperties = device_queue_family_properties;
                mDeviceProperties.mQueueFamilyCount = queue_family_count;
                selected_device = device;
             } else {
@@ -214,7 +215,22 @@ class RenderContextVulkan {
                }
             }
          }
+
          SystemLogger::get().info("Selected Adapter: %s Id:  %x", mDeviceProperties.mDeviceProperties.deviceName, mDeviceProperties.mDeviceProperties.deviceID);
+         SystemLogger::get().info("Queue family count %d", mDeviceProperties.mQueueFamilyCount);
+         int count = 0;
+         for (auto & prop : mDeviceProperties.mDeviceQueueFamilyProperties) {
+            SystemLogger::get().info("--------------------------------------------");
+            SystemLogger::get().info("Queue family no. %d", count++);
+            SystemLogger::get().info("Queue count: %d", prop.queueCount);
+            SystemLogger::get().info("minImageTransferGranularity width: %d", prop.minImageTransferGranularity.width);
+            SystemLogger::get().info("minImageTransferGranularity height: %d", prop.minImageTransferGranularity.height);
+            SystemLogger::get().info("minImageTransferGranularity depth: %d", prop.minImageTransferGranularity.depth);
+            SystemLogger::get().info("VK_QUEUE_GRAPHICS_BIT: %s", prop.queueFlags & VK_QUEUE_GRAPHICS_BIT ? "YES" : "NO");
+            SystemLogger::get().info("VK_QUEUE_COMPUTE_BIT: %s", prop.queueFlags & VK_QUEUE_COMPUTE_BIT ? "YES" : "NO");
+            SystemLogger::get().info("VK_QUEUE_TRANSFER_BIT: %s", prop.queueFlags & VK_QUEUE_TRANSFER_BIT ? "YES" : "NO");
+            SystemLogger::get().info("VK_QUEUE_SPARSE_BINDING_BIT: %s", prop.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT ? "YES" : "NO");
+         }
       }
       return mPhysicalDevice= selected_device;
    }
