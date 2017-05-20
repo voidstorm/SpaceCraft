@@ -20,8 +20,5 @@ public:
       static auto log= std::make_unique<Logger>("vtcore.log");
       return *(log.get());
    }
-
-private:
-   std::unique_ptr<Logger> mLog;
 };
 }

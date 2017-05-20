@@ -79,6 +79,7 @@ set(PRIVATE_HEADER_FILES
   include/VortexCore/private/Frustum.h
   include/VortexCore/private/Mesh.h
   include/VortexCore/private/RenderContextVulkan.h
+  include/vortexcore/private/VkErrorHelper.h
 )
 
 set(SOURCE_FILES

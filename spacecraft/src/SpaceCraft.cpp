@@ -5,6 +5,8 @@
 #include "VortexCore\RenderContext.h"
 #include "VortexCore\ThreadMap.h"
 
+#include "GameLogger.h"
+
 #include <iostream>
 #include <exception>
 
@@ -35,6 +37,7 @@ int main(int argc, char** argv) {
       return Vt::App::AppWindow::exec();
    } catch (const std::exception& e) {
       std::cout << e.what() << std::endl;
+      Sc::GameLogger::get().error(e.what());
       return -1;
    }
    return 0;

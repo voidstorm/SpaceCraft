@@ -6,7 +6,7 @@
 #include "vulkan\vulkan.h"
 
 #include "..\SystemLogger.h"
-
+#include "VkErrorHelper.h"
 
 namespace Vt {
 namespace Gfx {
@@ -112,17 +112,17 @@ class RenderContextVulkan {
          VkInstance instance = nullptr;
          auto result = vkCreateInstance(&instance_info, nullptr, &instance);
          if (result != VkResult::VK_SUCCESS) {
+            SystemLogger::get().info("Failed to create instance with error: %s", VkErrorHelper::vkResultToStr(result).c_str());
             return nullptr;
          }
-
-         SystemLogger::get().info("Vulkan instance created with result %d", (int)result);
-
          return instance;
       };
 
       static VkInstance instance = createInstance();
       return instance;
    }
+
+
 
 
    RenderContextVulkanSettings mSettings;
