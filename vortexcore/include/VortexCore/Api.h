@@ -8,6 +8,8 @@
 #define V(x) 
 #endif
 
+#define LOGGING_ON 
+
 #ifdef _WIN32
 #pragma warning( disable : 4251 )
 #ifdef _DEBUG
@@ -35,6 +37,17 @@
          SystemLogger::get().info("Failed to create instance with error: %s", VkErrorHelper::vkResultToStr(result).c_str()); \
       } \
 } 
+
+#ifdef LOGGING_ON
+#define SYSTEM_LOG_INFO(x, ...) SystemLogger::get().info(x, ##__VA_ARGS__)
+#define SYSTEM_LOG_WARN(x, ...) SystemLogger::get().warn(x, ##__VA_ARGS__)
+#define SYSTEM_LOG_ERROR(x, ...) SystemLogger::get().error(x, ##__VA_ARGS__)
+#else 
+#define SYSTEM_LOG_INFO(x, ...)
+#define SYSTEM_LOG_WARN(x, ...)
+#define SYSTEM_LOG_ERROR(x, ...)
+#endif
+
 
 //D3D DEBUG MACROS
 #define D3D_DEBUG

@@ -26,7 +26,10 @@ class Logger {
 public:
    static const unsigned MAX_LINE_LEN = 2048;
 
-   Logger(const std::string & logfile) {
+   Logger(const std::string & logfile, bool streamToStdOut=false, bool breakOnWarn=false, bool breakOnError=false) :
+      mStreamToStdOut(streamToStdOut),
+      mBreakOnWarn(breakOnWarn),
+      mBreakOnError(breakOnError){
       try {
          mLog.open(logfile, std::ofstream::out | std::ofstream::trunc);
       } catch (const std::exception&) {
@@ -55,8 +58,17 @@ public:
                << mBuffer.data()
                << std::endl;
             mLog << ss.str();
+            if (mStreamToStdOut) {
+               std::cout << ss.str();
+            }
          }
          mLog.flush();
+      }
+      if (mBreakOnWarn && level == LogLevel::LOG_WARNING) {
+         _CrtDbgBreak();
+      }
+      if (mBreakOnError && level == LogLevel::LOG_ERROR) {
+         _CrtDbgBreak();
       }
    }
 
@@ -79,5 +91,8 @@ private:
    std::array<char, MAX_LINE_LEN> mBuffer;
    std::recursive_mutex mMutex;
    std::ofstream mLog;
+   bool mStreamToStdOut=false;
+   bool mBreakOnWarn = false; 
+   bool mBreakOnError = false;
 };
 }

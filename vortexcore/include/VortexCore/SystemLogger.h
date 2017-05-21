@@ -17,7 +17,11 @@ public:
    }
 
    static Logger & get() {
-      static auto log= std::make_unique<Logger>("vtcore.log");
+#ifdef _DEBUG
+      static auto log= std::make_unique<Logger>("vtcore.log", true, true, true);
+#else
+      static auto log = std::make_unique<Logger>("vtcore.log");
+#endif
       return *(log.get());
    }
 };

@@ -27,10 +27,10 @@ void Vt::Gfx::RenderContext::init() {
          mVkContext = std::unique_ptr<RenderContextVulkan>(new RenderContextVulkan(settings));
          if (mVkContext) {
             //we find a suitable vulkan device
-            auto physical_device= mVkContext->enumerateAndSelectDevice(Vt::Gfx::DeviceSelectionVulkan::AUTO_SELECT);
+            auto physicalDevice= mVkContext->enumerateAndSelectDevice(Vt::Gfx::DeviceSelectionVulkan::AUTO_SELECT);
             //next we create a logical device
-            if (physical_device) {
-               mVkContext->createDevice(physical_device);
+            if (physicalDevice) {
+               mVkContext->createDevice(physicalDevice);
             }
          }
       } catch (const std::exception& e) {

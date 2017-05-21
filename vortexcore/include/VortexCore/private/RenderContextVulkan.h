@@ -46,6 +46,30 @@ struct DevicePropertiesVulkan {
    std::vector<std::string> mExtensions;
 };
 
+struct QueueCreationInfo {
+   enum class QueueCount {
+      _1= 1,
+      _2,
+      _3,
+      _4,
+      _5,
+      _7,
+      MAX = 100
+   };
+   QueueCount mGfxQueueCount = QueueCount::_1;
+   QueueCount mComputeQueueCount = QueueCount::_1;
+   QueueCount mTransferQueueCount = QueueCount::_1;
+   bool mGfxQueueExclusive = false;
+   bool mComputeQueueExclusive = true;
+   bool mTransferQueueExclusive = true;
+};
+
+struct QueueFamilyIndex {
+   uint32_t mGraphics = 0;
+   uint32_t mCompute = 0;
+   uint32_t mTransfer = 0;
+};
+
 class RenderContextVulkan {
 
    friend class RenderContext;
@@ -82,30 +106,30 @@ class RenderContextVulkan {
       auto createInstance = [this]()->VkInstance {
 
          //application info
-         VkApplicationInfo app_info = {};
-         app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-         app_info.pApplicationName = "VortexCore";
-         app_info.pEngineName = "VortexCore";
-         app_info.apiVersion = VK_API_VERSION_1_0;
+         VkApplicationInfo appInfo = {};
+         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+         appInfo.pApplicationName = "VortexCore";
+         appInfo.pEngineName = "VortexCore";
+         appInfo.apiVersion = VK_API_VERSION_1_0;
 
          //instance extension
-         std::vector<const char*> instance_extensions = { VK_KHR_SURFACE_EXTENSION_NAME,
+         std::vector<const char*> instanceExtensions = { VK_KHR_SURFACE_EXTENSION_NAME,
                                                            VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 
          //instance info
-         VkInstanceCreateInfo instance_info = {};
-         instance_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-         instance_info.pNext = NULL;
-         instance_info.pApplicationInfo = &app_info;
+         VkInstanceCreateInfo instanceInfo = {};
+         instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+         instanceInfo.pNext = NULL;
+         instanceInfo.pApplicationInfo = &appInfo;
 
          //debugging and validation support
-         if (instance_extensions.size() > 0) {
+         if (instanceExtensions.size() > 0) {
             if (mSettings.mValidation >= RenderContextVulkanSettings::ValidationFlags::STANDARD) {
-               instance_extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+               instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
             }
 
-            instance_info.enabledExtensionCount = (uint32_t)instance_extensions.size();
-            instance_info.ppEnabledExtensionNames = instance_extensions.data();
+            instanceInfo.enabledExtensionCount = (uint32_t)instanceExtensions.size();
+            instanceInfo.ppEnabledExtensionNames = instanceExtensions.data();
          }
 
          if (mSettings.mValidation == RenderContextVulkanSettings::ValidationFlags::STANDARD) {
@@ -115,8 +139,8 @@ class RenderContextVulkan {
                "VK_LAYER_LUNARG_monitor"
             };
 
-            instance_info.enabledLayerCount = validationLayerCount;
-            instance_info.ppEnabledLayerNames = validationLayerNames;
+            instanceInfo.enabledLayerCount = validationLayerCount;
+            instanceInfo.ppEnabledLayerNames = validationLayerNames;
          } else if (mSettings.mValidation == RenderContextVulkanSettings::ValidationFlags::ALL) {
             int32_t validationLayerCount = 2;
             const char *validationLayerNames[] = {
@@ -124,12 +148,12 @@ class RenderContextVulkan {
                "VK_LAYER_LUNARG_monitor"
             };
 
-            instance_info.enabledLayerCount = validationLayerCount;
-            instance_info.ppEnabledLayerNames = validationLayerNames;
+            instanceInfo.enabledLayerCount = validationLayerCount;
+            instanceInfo.ppEnabledLayerNames = validationLayerNames;
          }
 
          VkInstance instance = nullptr;
-         VK_CHECK_RESULT(vkCreateInstance(&instance_info, nullptr, &instance));
+         VK_CHECK_RESULT(vkCreateInstance(&instanceInfo, nullptr, &instance));
          return instance;
       };
 
@@ -142,241 +166,364 @@ class RenderContextVulkan {
    //enumerate and select devices
    VkPhysicalDevice enumerateAndSelectDevice(const DeviceSelectionVulkan device_selection = DeviceSelectionVulkan::AUTO_SELECT) {
       // Physical device
-      uint32_t gpu_count = 0;
+      uint32_t gpuCount = 0;
       // Get number of available physical devices
-      VK_CHECK_RESULT(vkEnumeratePhysicalDevices(mVkInstance, &gpu_count, nullptr));
+      VK_CHECK_RESULT(vkEnumeratePhysicalDevices(mVkInstance, &gpuCount, nullptr));
       //we dont have a suitable gpu, exit
-      if (!gpu_count) {
+      if (!gpuCount) {
          VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::enumerateAndSelectDevice: Could find a vulkan capable device!");
       }
 
       // Enumerate devices
-      std::vector<VkPhysicalDevice> physical_devices(gpu_count);
-      VK_CHECK_RESULT(vkEnumeratePhysicalDevices(mVkInstance, &gpu_count, physical_devices.data()));
+      std::vector<VkPhysicalDevice> physicalDevices(gpuCount);
+      VK_CHECK_RESULT(vkEnumeratePhysicalDevices(mVkInstance, &gpuCount, physicalDevices.data()));
 
       //List all available gpu's
-      SystemLogger::get().info("--------------------------------------------");
-      SystemLogger::get().info("Found %d Vulkan capable devices", gpu_count);
-      for (auto & device : physical_devices) {
-         VkPhysicalDeviceProperties device_properties;
-         vkGetPhysicalDeviceProperties(device, &device_properties);
-         SystemLogger::get().info("--------------------------------------------");
-         SystemLogger::get().info("Device Name: %s", device_properties.deviceName);
-         SystemLogger::get().info("Device Id: %x", device_properties.deviceID);
-         SystemLogger::get().info("Device Type: %s", VkErrorHelper::physicalDeviceTypeToStr(device_properties.deviceType).c_str());
-         SystemLogger::get().info("Device API: %d.%d.%d", (device_properties.apiVersion >> 22), ((device_properties.apiVersion >> 12) & 0x3ff), (device_properties.apiVersion & 0xfff));
+      SYSTEM_LOG_INFO("--------------------------------------------");
+      SYSTEM_LOG_INFO("Found %d Vulkan capable devices", gpuCount);
+      for (auto & device : physicalDevices) {
+         VkPhysicalDeviceProperties deviceProperties;
+         vkGetPhysicalDeviceProperties(device, &deviceProperties);
+         SYSTEM_LOG_INFO("--------------------------------------------");
+         SYSTEM_LOG_INFO("Device Name: %s", deviceProperties.deviceName);
+         SYSTEM_LOG_INFO("Device Id: %x", deviceProperties.deviceID);
+         SYSTEM_LOG_INFO("Device Type: %s", VkErrorHelper::physicalDeviceTypeToStr(deviceProperties.deviceType).c_str());
+         SYSTEM_LOG_INFO("Device API: %d.%d.%d", (deviceProperties.apiVersion >> 22), ((deviceProperties.apiVersion >> 12) & 0x3ff), (deviceProperties.apiVersion & 0xfff));
       }
 
       // GPU selection
-      uint32_t selected_device_id = 0;
-      VkPhysicalDevice selected_device = nullptr;
+      uint32_t selectedDeviceId = 0;
+      VkPhysicalDevice selectedDevice = nullptr;
 
       //Manual gpu selection based on index
       if (device_selection >= DeviceSelectionVulkan::DEVICE_0) {
-         selected_device_id = (unsigned)((int)device_selection - (int)DeviceSelectionVulkan::DEVICE_0);
-         if (selected_device_id >= gpu_count) {
-            SystemLogger::get().warn("RenderContextVulkan::enumerateAndSelectDevice: Selected device idx(%d) not available, using device idx(%d) instead!", selected_device_id, 0);
-            selected_device_id = 0;
+         selectedDeviceId = (unsigned)((int)device_selection - (int)DeviceSelectionVulkan::DEVICE_0);
+         if (selectedDeviceId >= gpuCount) {
+            SYSTEM_LOG_WARN("RenderContextVulkan::enumerateAndSelectDevice: Selected device idx(%d) not available, using device idx(%d) instead!", selectedDeviceId, 0);
+            selectedDeviceId = 0;
          }
-         selected_device = physical_devices[selected_device_id];
-         VkPhysicalDeviceProperties device_properties;
-         VkPhysicalDeviceFeatures device_features;
-         VkPhysicalDeviceMemoryProperties device_memory_properties;
-         std::vector<VkQueueFamilyProperties> device_queue_family_properties;
-         uint32_t queue_family_count = 0;
+         selectedDevice = physicalDevices[selectedDeviceId];
+         VkPhysicalDeviceProperties deviceProperties;
+         VkPhysicalDeviceFeatures deviceFeatures;
+         VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
+         std::vector<VkQueueFamilyProperties> deviceQueueFamilyProperties;
+         uint32_t queueFamilyCount = 0;
 
-         vkGetPhysicalDeviceProperties(selected_device, &device_properties);
-         vkGetPhysicalDeviceFeatures(selected_device, &device_features);
-         vkGetPhysicalDeviceMemoryProperties(selected_device, &device_memory_properties);
-         vkGetPhysicalDeviceQueueFamilyProperties(selected_device, &queue_family_count, nullptr);
-         device_queue_family_properties.resize(queue_family_count);
-         vkGetPhysicalDeviceQueueFamilyProperties(selected_device, &queue_family_count, device_queue_family_properties.data());
+         vkGetPhysicalDeviceProperties(selectedDevice, &deviceProperties);
+         vkGetPhysicalDeviceFeatures(selectedDevice, &deviceFeatures);
+         vkGetPhysicalDeviceMemoryProperties(selectedDevice, &deviceMemoryProperties);
+         vkGetPhysicalDeviceQueueFamilyProperties(selectedDevice, &queueFamilyCount, nullptr);
+         deviceQueueFamilyProperties.resize(queueFamilyCount);
+         vkGetPhysicalDeviceQueueFamilyProperties(selectedDevice, &queueFamilyCount, deviceQueueFamilyProperties.data());
 
-         mDeviceProperties.mDeviceProperties = device_properties;
-         mDeviceProperties.mDeviceFeatures = device_features;
-         mDeviceProperties.mDeviceMemoryProperties = device_memory_properties;
-         mDeviceProperties.mDeviceQueueFamilyProperties = device_queue_family_properties;
-         mDeviceProperties.mQueueFamilyCount = queue_family_count;
+         mDeviceProperties.mDeviceProperties = deviceProperties;
+         mDeviceProperties.mDeviceFeatures = deviceFeatures;
+         mDeviceProperties.mDeviceMemoryProperties = deviceMemoryProperties;
+         mDeviceProperties.mDeviceQueueFamilyProperties = deviceQueueFamilyProperties;
+         mDeviceProperties.mQueueFamilyCount = queueFamilyCount;
       }
       //auto select most suitable gpu available
       //atm we select a discret gpu if available
       else if (device_selection == DeviceSelectionVulkan::AUTO_SELECT) {
-         for (auto & device : physical_devices) {
-            VkPhysicalDeviceProperties device_properties;
-            VkPhysicalDeviceFeatures device_features;
-            VkPhysicalDeviceMemoryProperties device_memory_properties;
-            std::vector<VkQueueFamilyProperties> device_queue_family_properties;
-            uint32_t queue_family_count=0;
+         for (auto & device : physicalDevices) {
+            VkPhysicalDeviceProperties deviceProperties;
+            VkPhysicalDeviceFeatures deviceFeatures;
+            VkPhysicalDeviceMemoryProperties deviceMemoryProperties;
+            std::vector<VkQueueFamilyProperties> deviceQueueFamilyProperties;
+            uint32_t queueFamilyCount=0;
 
-            vkGetPhysicalDeviceProperties(device, &device_properties);
-            vkGetPhysicalDeviceFeatures(device, &device_features);
-            vkGetPhysicalDeviceMemoryProperties(device, &device_memory_properties);
-            vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
-            device_queue_family_properties.resize(queue_family_count);
-            vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, device_queue_family_properties.data());
+            vkGetPhysicalDeviceProperties(device, &deviceProperties);
+            vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+            vkGetPhysicalDeviceMemoryProperties(device, &deviceMemoryProperties);
+            vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+            deviceQueueFamilyProperties.resize(queueFamilyCount);
+            vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, deviceQueueFamilyProperties.data());
 
             //enumerate and store extensions supported by selected device
-            uint32_t ext_count = 0;
-            std::vector<std::string> extension_names;
-            vkEnumerateDeviceExtensionProperties(device, nullptr, &ext_count, nullptr);
-            if (ext_count > 0) {
-               std::vector<VkExtensionProperties> extensions(ext_count);
-               if (vkEnumerateDeviceExtensionProperties(device, nullptr, &ext_count, extensions.data()) == VK_SUCCESS) {
+            uint32_t extCount = 0;
+            std::vector<std::string> extensionNames;
+            vkEnumerateDeviceExtensionProperties(device, nullptr, &extCount, nullptr);
+            if (extCount > 0) {
+               std::vector<VkExtensionProperties> extensions(extCount);
+               if (vkEnumerateDeviceExtensionProperties(device, nullptr, &extCount, extensions.data()) == VK_SUCCESS) {
                   for (auto ext : extensions) {
-                     extension_names.push_back(ext.extensionName);
+                     extensionNames.push_back(ext.extensionName);
                   }
                }
             }
 
-            logAdapterProperties(device_properties, device_queue_family_properties, device_features, device_memory_properties, extension_names);
+            logAdapterProperties(deviceProperties, deviceQueueFamilyProperties, deviceFeatures, deviceMemoryProperties, extensionNames);
 
-            if (selected_device == nullptr) {
-               mDeviceProperties.mDeviceProperties = device_properties;
-               mDeviceProperties.mDeviceFeatures = device_features;
-               mDeviceProperties.mDeviceMemoryProperties = device_memory_properties;
-               mDeviceProperties.mDeviceQueueFamilyProperties = device_queue_family_properties;
-               mDeviceProperties.mQueueFamilyCount = queue_family_count;
-               mDeviceProperties.mExtensions = extension_names;
-               selected_device = device;
+            if (selectedDevice == nullptr) {
+               mDeviceProperties.mDeviceProperties = deviceProperties;
+               mDeviceProperties.mDeviceFeatures = deviceFeatures;
+               mDeviceProperties.mDeviceMemoryProperties = deviceMemoryProperties;
+               mDeviceProperties.mDeviceQueueFamilyProperties = deviceQueueFamilyProperties;
+               mDeviceProperties.mQueueFamilyCount = queueFamilyCount;
+               mDeviceProperties.mExtensions = extensionNames;
+               selectedDevice = device;
             } else {
                if (  mDeviceProperties.mDeviceProperties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && 
-                     device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-                  mDeviceProperties.mDeviceProperties = device_properties;
-                  mDeviceProperties.mDeviceFeatures = device_features;
-                  mDeviceProperties.mDeviceMemoryProperties = device_memory_properties;
-                  mDeviceProperties.mDeviceQueueFamilyProperties = device_queue_family_properties;
-                  mDeviceProperties.mQueueFamilyCount = queue_family_count;
-                  mDeviceProperties.mExtensions = extension_names;
-                  selected_device = device;
+                     deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+                  mDeviceProperties.mDeviceProperties = deviceProperties;
+                  mDeviceProperties.mDeviceFeatures = deviceFeatures;
+                  mDeviceProperties.mDeviceMemoryProperties = deviceMemoryProperties;
+                  mDeviceProperties.mDeviceQueueFamilyProperties = deviceQueueFamilyProperties;
+                  mDeviceProperties.mQueueFamilyCount = queueFamilyCount;
+                  mDeviceProperties.mExtensions = extensionNames;
+                  selectedDevice = device;
                }
             }
          }
       }
-      SystemLogger::get().info("Selected Adapter: %s Id:  %x", mDeviceProperties.mDeviceProperties.deviceName, mDeviceProperties.mDeviceProperties.deviceID);
+      SYSTEM_LOG_INFO("Selected Adapter: %s Id:  %x", mDeviceProperties.mDeviceProperties.deviceName, mDeviceProperties.mDeviceProperties.deviceID);
       if (!mDeviceProperties.mQueueFamilyCount) {
          VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::enumerateAndSelectDevice: Could find a vulkan capable device!");
       }
-      return mPhysicalDevice= selected_device;
+      return mPhysicalDevice= selectedDevice;
    }
 
    //-----------------------------------------------------------------
+   // Finds the proper queue family index
+   uint32_t getQueueFamilyIndex(const VkQueueFlagBits queueFlags) {
+      // Dedicated queue for compute
+      // Try to find a queue family index that supports compute but not graphics
+      if (queueFlags & VK_QUEUE_COMPUTE_BIT) {
+         for (uint32_t i = 0; i < static_cast<uint32_t>(mDeviceProperties.mDeviceQueueFamilyProperties.size()); i++) {
+            if ((mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & queueFlags) && ((mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)) {
+               return i;
+               break;
+            }
+         }
+      }
+
+      // Dedicated queue for transfer
+      // Try to find a queue family index that supports transfer but not graphics and compute
+      if (queueFlags & VK_QUEUE_TRANSFER_BIT) {
+         for (uint32_t i = 0; i < static_cast<uint32_t>(mDeviceProperties.mDeviceQueueFamilyProperties.size()); i++) {
+            if ((mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & queueFlags) && 
+                 ((mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) && 
+                  ((mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) == 0)) {
+               return i;
+               break;
+            }
+         }
+      }
+
+      // For other queue types or if no separate compute queue is present, return the first one to support the requested flags
+      for (uint32_t i = 0; i < static_cast<uint32_t>(mDeviceProperties.mDeviceQueueFamilyProperties.size()); i++) {
+         if (mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & queueFlags) {
+            return i;
+            break;
+         }
+      }
+      SYSTEM_LOG_ERROR("RenderContextVulkan::getQueueFamilyIndex: Could not find a matching queue index!");
+      VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::getQueueFamilyIndex: Could not find a matching queue index!");
+   }
+
+
+   //-----------------------------------------------------------------
    // Creates a logical device
-   VkDevice createDevice(const VkPhysicalDevice device) {
-      //VK_CHECK_RESULT()
+   VkDevice createDevice(const VkPhysicalDevice device, const QueueCreationInfo & queueCreateInfo) {
+
+      std::vector<VkDeviceQueueCreateInfo> queueCreateInfos{};
+
+      // Get queue family indices for the requested queue family types
+      // Note that the indices may overlap depending on the implementation
+
+      const float defaultQueuePriority(0.0f);
+
+      // Graphics queue
+      if (requestedQueueTypes & VK_QUEUE_GRAPHICS_BIT) {
+         queueFamilyIndices.graphics = getQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT);
+         VkDeviceQueueCreateInfo queueInfo{};
+         queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+         queueInfo.queueFamilyIndex = queueFamilyIndices.graphics;
+         queueInfo.queueCount = 1;
+         queueInfo.pQueuePriorities = &defaultQueuePriority;
+         queueCreateInfos.push_back(queueInfo);
+      } else {
+         queueFamilyIndices.graphics = VK_NULL_HANDLE;
+      }
+
+      // Dedicated compute queue
+      if (requestedQueueTypes & VK_QUEUE_COMPUTE_BIT) {
+         queueFamilyIndices.compute = getQueueFamilyIndex(VK_QUEUE_COMPUTE_BIT);
+         if (queueFamilyIndices.compute != queueFamilyIndices.graphics) {
+            // If compute family index differs, we need an additional queue create info for the compute queue
+            VkDeviceQueueCreateInfo queueInfo{};
+            queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueInfo.queueFamilyIndex = queueFamilyIndices.compute;
+            queueInfo.queueCount = 1;
+            queueInfo.pQueuePriorities = &defaultQueuePriority;
+            queueCreateInfos.push_back(queueInfo);
+         }
+      } else {
+         // Else we use the same queue
+         queueFamilyIndices.compute = queueFamilyIndices.graphics;
+      }
+
+      // Dedicated transfer queue
+      if (requestedQueueTypes & VK_QUEUE_TRANSFER_BIT) {
+         queueFamilyIndices.transfer = getQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
+         if ((queueFamilyIndices.transfer != queueFamilyIndices.graphics) && (queueFamilyIndices.transfer != queueFamilyIndices.compute)) {
+            // If compute family index differs, we need an additional queue create info for the compute queue
+            VkDeviceQueueCreateInfo queueInfo{};
+            queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueInfo.queueFamilyIndex = queueFamilyIndices.transfer;
+            queueInfo.queueCount = 1;
+            queueInfo.pQueuePriorities = &defaultQueuePriority;
+            queueCreateInfos.push_back(queueInfo);
+         }
+      } else {
+         // Else we use the same queue
+         queueFamilyIndices.transfer = queueFamilyIndices.graphics;
+      }
+
+      // Create the logical device representation
+      std::vector<const char*> deviceExtensions(enabledExtensions);
+      if (useSwapChain) {
+         // If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
+         deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+      }
+
+      VkDeviceCreateInfo deviceCreateInfo = {};
+      deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+      deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());;
+      deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
+      deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
+
+      // Enable the debug marker extension if it is present (likely meaning a debugging tool is present)
+      if (extensionSupported(VK_EXT_DEBUG_MARKER_EXTENSION_NAME)) {
+         deviceExtensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
+         enableDebugMarkers = true;
+      }
+
+      if (deviceExtensions.size() > 0) {
+         deviceCreateInfo.enabledExtensionCount = (uint32_t)deviceExtensions.size();
+         deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+      }
+
+      VK_CHECK_RESULT(vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &logicalDevice));
+
+      // Create a default command pool for graphics command buffers
+      commandPool = createCommandPool(queueFamilyIndices.graphics);
+
+     
       return nullptr;
    }
 
    //-----------------------------------------------------------------
    //log some useful adapter info
-   void logAdapterProperties( const VkPhysicalDeviceProperties & device_properties, 
-                              const std::vector<VkQueueFamilyProperties> & queue_properties,
+   void logAdapterProperties( const VkPhysicalDeviceProperties & deviceProperties, 
+                              const std::vector<VkQueueFamilyProperties> & queueProperties,
                               const VkPhysicalDeviceFeatures & features,
-                              const VkPhysicalDeviceMemoryProperties & memory_info,
+                              const VkPhysicalDeviceMemoryProperties & memoryInfo,
                               const std::vector<std::string> & extensions) {
 
-      SystemLogger::get().info("--------------------------------------------");
-      SystemLogger::get().info("Detailed Device Properties");
-      SystemLogger::get().info("--------------------------------------------");
-      SystemLogger::get().info("Adapter: %s", device_properties.deviceName);
-      SystemLogger::get().info("Queue family count %d", queue_properties.size());
+      SYSTEM_LOG_INFO("--------------------------------------------");
+      SYSTEM_LOG_INFO("Detailed Device Properties");
+      SYSTEM_LOG_INFO("--------------------------------------------");
+      SYSTEM_LOG_INFO("Adapter: %s", deviceProperties.deviceName);
+      SYSTEM_LOG_INFO("Queue family count %d", queueProperties.size());
       int count = 0;
-      for (auto & prop : queue_properties) {
-         SystemLogger::get().info("--------------------------------------------");
-         SystemLogger::get().info("Queue family idx. %d", count++);
-         SystemLogger::get().info("Queue count: %d", prop.queueCount);
-         SystemLogger::get().info("minImageTransferGranularity width: %d", prop.minImageTransferGranularity.width);
-         SystemLogger::get().info("minImageTransferGranularity height: %d", prop.minImageTransferGranularity.height);
-         SystemLogger::get().info("minImageTransferGranularity depth: %d", prop.minImageTransferGranularity.depth);
-         SystemLogger::get().info("VK_QUEUE_GRAPHICS_BIT: %s", prop.queueFlags & VK_QUEUE_GRAPHICS_BIT ? "YES" : "NO");
-         SystemLogger::get().info("VK_QUEUE_COMPUTE_BIT: %s", prop.queueFlags & VK_QUEUE_COMPUTE_BIT ? "YES" : "NO");
-         SystemLogger::get().info("VK_QUEUE_TRANSFER_BIT: %s", prop.queueFlags & VK_QUEUE_TRANSFER_BIT ? "YES" : "NO");
-         SystemLogger::get().info("VK_QUEUE_SPARSE_BINDING_BIT: %s", prop.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT ? "YES" : "NO");
+      for (auto & prop : queueProperties) {
+         SYSTEM_LOG_INFO("--------------------------------------------");
+         SYSTEM_LOG_INFO("Queue family idx. %d", count++);
+         SYSTEM_LOG_INFO("Queue count: %d", prop.queueCount);
+         SYSTEM_LOG_INFO("minImageTransferGranularity width: %d", prop.minImageTransferGranularity.width);
+         SYSTEM_LOG_INFO("minImageTransferGranularity height: %d", prop.minImageTransferGranularity.height);
+         SYSTEM_LOG_INFO("minImageTransferGranularity depth: %d", prop.minImageTransferGranularity.depth);
+         SYSTEM_LOG_INFO("VK_QUEUE_GRAPHICS_BIT: %s", prop.queueFlags & VK_QUEUE_GRAPHICS_BIT ? "YES" : "NO");
+         SYSTEM_LOG_INFO("VK_QUEUE_COMPUTE_BIT: %s", prop.queueFlags & VK_QUEUE_COMPUTE_BIT ? "YES" : "NO");
+         SYSTEM_LOG_INFO("VK_QUEUE_TRANSFER_BIT: %s", prop.queueFlags & VK_QUEUE_TRANSFER_BIT ? "YES" : "NO");
+         SYSTEM_LOG_INFO("VK_QUEUE_SPARSE_BINDING_BIT: %s", prop.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT ? "YES" : "NO");
       }
-      SystemLogger::get().info("--------------------------------------------");
-      SystemLogger::get().info("MEMORY PROPERTIES");
-      SystemLogger::get().info("memoryTypeCount: %d", memory_info.memoryTypeCount);
-      SystemLogger::get().info("Memory types:");
-      for (unsigned i = 0; i < memory_info.memoryTypeCount; ++i) {
-         SystemLogger::get().info("--------------------------------------------");
-         SystemLogger::get().info("heapIndex: %d", memory_info.memoryTypes[i].heapIndex);
-         SystemLogger::get().info("VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT: %s", memory_info.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT ? "YES" : "NO");
-         SystemLogger::get().info("VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT: %s", memory_info.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ? "YES" : "NO");
-         SystemLogger::get().info("VK_MEMORY_PROPERTY_HOST_COHERENT_BIT: %s", memory_info.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ? "YES" : "NO");
-         SystemLogger::get().info("VK_MEMORY_PROPERTY_HOST_CACHED_BIT: %s", memory_info.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_CACHED_BIT ? "YES" : "NO");
-         SystemLogger::get().info("VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT: %s", memory_info.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT ? "YES" : "NO");
+      SYSTEM_LOG_INFO("--------------------------------------------");
+      SYSTEM_LOG_INFO("MEMORY PROPERTIES");
+      SYSTEM_LOG_INFO("memoryTypeCount: %d", memoryInfo.memoryTypeCount);
+      SYSTEM_LOG_INFO("Memory types:");
+      for (unsigned i = 0; i < memoryInfo.memoryTypeCount; ++i) {
+         SYSTEM_LOG_INFO("--------------------------------------------");
+         SYSTEM_LOG_INFO("heapIndex: %d", memoryInfo.memoryTypes[i].heapIndex);
+         SYSTEM_LOG_INFO("VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT: %s", memoryInfo.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT ? "YES" : "NO");
+         SYSTEM_LOG_INFO("VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT: %s", memoryInfo.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ? "YES" : "NO");
+         SYSTEM_LOG_INFO("VK_MEMORY_PROPERTY_HOST_COHERENT_BIT: %s", memoryInfo.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ? "YES" : "NO");
+         SYSTEM_LOG_INFO("VK_MEMORY_PROPERTY_HOST_CACHED_BIT: %s", memoryInfo.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_CACHED_BIT ? "YES" : "NO");
+         SYSTEM_LOG_INFO("VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT: %s", memoryInfo.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT ? "YES" : "NO");
       }
-      SystemLogger::get().info("--------------------------------------------");
-      SystemLogger::get().info("memoryHeapCount: %d", memory_info.memoryHeapCount);
-      SystemLogger::get().info("Memory Heaps:");
-      for (unsigned i = 0; i < memory_info.memoryHeapCount; ++i) {
-         SystemLogger::get().info("size: %u MB", (unsigned)(memory_info.memoryHeaps[i].size / (1024LL* 1024LL)));
-         SystemLogger::get().info("VK_MEMORY_HEAP_DEVICE_LOCAL_BIT: %s", memory_info.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT ? "YES" : "NO");
-         SystemLogger::get().info("VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHX: %s", memory_info.memoryHeaps[i].flags & VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHX ? "YES" : "NO");
+      SYSTEM_LOG_INFO("--------------------------------------------");
+      SYSTEM_LOG_INFO("memoryHeapCount: %d", memoryInfo.memoryHeapCount);
+      SYSTEM_LOG_INFO("Memory Heaps:");
+      for (unsigned i = 0; i < memoryInfo.memoryHeapCount; ++i) {
+         SYSTEM_LOG_INFO("size: %u MB", (unsigned)(memoryInfo.memoryHeaps[i].size / (1024LL* 1024LL)));
+         SYSTEM_LOG_INFO("VK_MEMORY_HEAP_DEVICE_LOCAL_BIT: %s", memoryInfo.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT ? "YES" : "NO");
+         SYSTEM_LOG_INFO("VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHX: %s", memoryInfo.memoryHeaps[i].flags & VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHX ? "YES" : "NO");
       }
 
-      SystemLogger::get().info("--------------------------------------------");
-      SystemLogger::get().info("FEATURE SET");
-      SystemLogger::get().info("robustBufferAccess: %s", features.robustBufferAccess ? "YES" : "NO");
-      SystemLogger::get().info("fullDrawIndexUint32: %s",features.fullDrawIndexUint32 ? "YES" : "NO");
-      SystemLogger::get().info("imageCubeArray: %s",features.imageCubeArray ? "YES" : "NO");
-      SystemLogger::get().info("independentBlend: %s",features.independentBlend ? "YES" : "NO");
-      SystemLogger::get().info("geometryShader: %s",features.geometryShader ? "YES" : "NO");
-      SystemLogger::get().info("tessellationShader: %s",features.tessellationShader ? "YES" : "NO");
-      SystemLogger::get().info("sampleRateShading: %s",features.sampleRateShading ? "YES" : "NO");
-      SystemLogger::get().info("dualSrcBlend: %s",features.dualSrcBlend ? "YES" : "NO");
-      SystemLogger::get().info("logicOp: %s",features.logicOp ? "YES" : "NO");
-      SystemLogger::get().info("multiDrawIndirect: %s",features.multiDrawIndirect ? "YES" : "NO");
-      SystemLogger::get().info("drawIndirectFirstInstance: %s",features.drawIndirectFirstInstance ? "YES" : "NO");
-      SystemLogger::get().info("depthClamp: %s",features.depthClamp ? "YES" : "NO");
-      SystemLogger::get().info("depthBiasClamp: %s",features.depthBiasClamp ? "YES" : "NO");
-      SystemLogger::get().info("fillModeNonSolid: %s",features.fillModeNonSolid ? "YES" : "NO");
-      SystemLogger::get().info("depthBounds: %s",features.depthBounds ? "YES" : "NO");
-      SystemLogger::get().info("wideLines: %s",features.wideLines ? "YES" : "NO");
-      SystemLogger::get().info("largePoints: %s",features.largePoints ? "YES" : "NO");
-      SystemLogger::get().info("alphaToOne: %s",features.alphaToOne ? "YES" : "NO");
-      SystemLogger::get().info("multiViewport: %s",features.multiViewport ? "YES" : "NO");
-      SystemLogger::get().info("samplerAnisotropy: %s",features.samplerAnisotropy ? "YES" : "NO");
-      SystemLogger::get().info("textureCompressionETC2: %s",features.textureCompressionETC2 ? "YES" : "NO");
-      SystemLogger::get().info("textureCompressionASTC_LDR: %s",features.textureCompressionASTC_LDR ? "YES" : "NO");
-      SystemLogger::get().info("textureCompressionBC: %s",features.textureCompressionBC ? "YES" : "NO");
-      SystemLogger::get().info("occlusionQueryPrecise: %s",features.occlusionQueryPrecise ? "YES" : "NO");
-      SystemLogger::get().info("pipelineStatisticsQuery: %s",features.pipelineStatisticsQuery ? "YES" : "NO");
-      SystemLogger::get().info("vertexPipelineStoresAndAtomics: %s",features.vertexPipelineStoresAndAtomics ? "YES" : "NO");
-      SystemLogger::get().info("fragmentStoresAndAtomics: %s",features.fragmentStoresAndAtomics ? "YES" : "NO");
-      SystemLogger::get().info("shaderTessellationAndGeometryPointSize: %s",features.shaderTessellationAndGeometryPointSize ? "YES" : "NO");
-      SystemLogger::get().info("shaderImageGatherExtended: %s",features.shaderImageGatherExtended ? "YES" : "NO");
-      SystemLogger::get().info("shaderStorageImageExtendedFormats: %s",features.shaderStorageImageExtendedFormats ? "YES" : "NO");
-      SystemLogger::get().info("shaderStorageImageMultisample: %s",features.shaderStorageImageMultisample ? "YES" : "NO");
-      SystemLogger::get().info("shaderStorageImageReadWithoutFormat: %s",features.shaderStorageImageReadWithoutFormat ? "YES" : "NO");
-      SystemLogger::get().info("shaderStorageImageWriteWithoutFormat: %s",features.shaderStorageImageWriteWithoutFormat ? "YES" : "NO");
-      SystemLogger::get().info("shaderUniformBufferArrayDynamicIndexing: %s",features.shaderUniformBufferArrayDynamicIndexing ? "YES" : "NO");
-      SystemLogger::get().info("shaderSampledImageArrayDynamicIndexing: %s",features.shaderSampledImageArrayDynamicIndexing ? "YES" : "NO");
-      SystemLogger::get().info("shaderStorageBufferArrayDynamicIndexing: %s",features.shaderStorageBufferArrayDynamicIndexing ? "YES" : "NO");
-      SystemLogger::get().info("shaderStorageImageArrayDynamicIndexing: %s",features.shaderStorageImageArrayDynamicIndexing ? "YES" : "NO");
-      SystemLogger::get().info("shaderClipDistance: %s",features.shaderClipDistance ? "YES" : "NO");
-      SystemLogger::get().info("shaderCullDistance: %s",features.shaderCullDistance ? "YES" : "NO");
-      SystemLogger::get().info("shaderFloat64: %s",features.shaderFloat64 ? "YES" : "NO");
-      SystemLogger::get().info("shaderInt64: %s",features.shaderInt64 ? "YES" : "NO");
-      SystemLogger::get().info("shaderInt16: %s",features.shaderInt16 ? "YES" : "NO");
-      SystemLogger::get().info("shaderResourceResidency: %s",features.shaderResourceResidency ? "YES" : "NO");
-      SystemLogger::get().info("shaderResourceMinLod: %s",features.shaderResourceMinLod ? "YES" : "NO");
-      SystemLogger::get().info("sparseBinding: %s",features.sparseBinding ? "YES" : "NO");
-      SystemLogger::get().info("sparseResidencyBuffer: %s",features.sparseResidencyBuffer ? "YES" : "NO");
-      SystemLogger::get().info("sparseResidencyImage2D: %s",features.sparseResidencyImage2D ? "YES" : "NO");
-      SystemLogger::get().info("sparseResidencyImage3D: %s",features.sparseResidencyImage3D ? "YES" : "NO");
-      SystemLogger::get().info("sparseResidency2Samples: %s",features.sparseResidency2Samples ? "YES" : "NO");
-      SystemLogger::get().info("sparseResidency4Samples: %s",features.sparseResidency4Samples ? "YES" : "NO");
-      SystemLogger::get().info("sparseResidency8Samples: %s",features.sparseResidency8Samples ? "YES" : "NO");
-      SystemLogger::get().info("sparseResidency16Samples: %s",features.sparseResidency16Samples ? "YES" : "NO");
-      SystemLogger::get().info("sparseResidencyAliased: %s",features.sparseResidencyAliased ? "YES" : "NO");
-      SystemLogger::get().info("variableMultisampleRate: %s",features.variableMultisampleRate ? "YES" : "NO");
-      SystemLogger::get().info("inheritedQueries: %s",features.inheritedQueries ? "YES" : "NO");
-      SystemLogger::get().info("--------------------------------------------");
-      SystemLogger::get().info("SUPPORTED EXTENSIONS");
+      SYSTEM_LOG_INFO("--------------------------------------------");
+      SYSTEM_LOG_INFO("FEATURE SET");
+      SYSTEM_LOG_INFO("robustBufferAccess: %s", features.robustBufferAccess ? "YES" : "NO");
+      SYSTEM_LOG_INFO("fullDrawIndexUint32: %s",features.fullDrawIndexUint32 ? "YES" : "NO");
+      SYSTEM_LOG_INFO("imageCubeArray: %s",features.imageCubeArray ? "YES" : "NO");
+      SYSTEM_LOG_INFO("independentBlend: %s",features.independentBlend ? "YES" : "NO");
+      SYSTEM_LOG_INFO("geometryShader: %s",features.geometryShader ? "YES" : "NO");
+      SYSTEM_LOG_INFO("tessellationShader: %s",features.tessellationShader ? "YES" : "NO");
+      SYSTEM_LOG_INFO("sampleRateShading: %s",features.sampleRateShading ? "YES" : "NO");
+      SYSTEM_LOG_INFO("dualSrcBlend: %s",features.dualSrcBlend ? "YES" : "NO");
+      SYSTEM_LOG_INFO("logicOp: %s",features.logicOp ? "YES" : "NO");
+      SYSTEM_LOG_INFO("multiDrawIndirect: %s",features.multiDrawIndirect ? "YES" : "NO");
+      SYSTEM_LOG_INFO("drawIndirectFirstInstance: %s",features.drawIndirectFirstInstance ? "YES" : "NO");
+      SYSTEM_LOG_INFO("depthClamp: %s",features.depthClamp ? "YES" : "NO");
+      SYSTEM_LOG_INFO("depthBiasClamp: %s",features.depthBiasClamp ? "YES" : "NO");
+      SYSTEM_LOG_INFO("fillModeNonSolid: %s",features.fillModeNonSolid ? "YES" : "NO");
+      SYSTEM_LOG_INFO("depthBounds: %s",features.depthBounds ? "YES" : "NO");
+      SYSTEM_LOG_INFO("wideLines: %s",features.wideLines ? "YES" : "NO");
+      SYSTEM_LOG_INFO("largePoints: %s",features.largePoints ? "YES" : "NO");
+      SYSTEM_LOG_INFO("alphaToOne: %s",features.alphaToOne ? "YES" : "NO");
+      SYSTEM_LOG_INFO("multiViewport: %s",features.multiViewport ? "YES" : "NO");
+      SYSTEM_LOG_INFO("samplerAnisotropy: %s",features.samplerAnisotropy ? "YES" : "NO");
+      SYSTEM_LOG_INFO("textureCompressionETC2: %s",features.textureCompressionETC2 ? "YES" : "NO");
+      SYSTEM_LOG_INFO("textureCompressionASTC_LDR: %s",features.textureCompressionASTC_LDR ? "YES" : "NO");
+      SYSTEM_LOG_INFO("textureCompressionBC: %s",features.textureCompressionBC ? "YES" : "NO");
+      SYSTEM_LOG_INFO("occlusionQueryPrecise: %s",features.occlusionQueryPrecise ? "YES" : "NO");
+      SYSTEM_LOG_INFO("pipelineStatisticsQuery: %s",features.pipelineStatisticsQuery ? "YES" : "NO");
+      SYSTEM_LOG_INFO("vertexPipelineStoresAndAtomics: %s",features.vertexPipelineStoresAndAtomics ? "YES" : "NO");
+      SYSTEM_LOG_INFO("fragmentStoresAndAtomics: %s",features.fragmentStoresAndAtomics ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderTessellationAndGeometryPointSize: %s",features.shaderTessellationAndGeometryPointSize ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderImageGatherExtended: %s",features.shaderImageGatherExtended ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderStorageImageExtendedFormats: %s",features.shaderStorageImageExtendedFormats ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderStorageImageMultisample: %s",features.shaderStorageImageMultisample ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderStorageImageReadWithoutFormat: %s",features.shaderStorageImageReadWithoutFormat ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderStorageImageWriteWithoutFormat: %s",features.shaderStorageImageWriteWithoutFormat ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderUniformBufferArrayDynamicIndexing: %s",features.shaderUniformBufferArrayDynamicIndexing ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderSampledImageArrayDynamicIndexing: %s",features.shaderSampledImageArrayDynamicIndexing ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderStorageBufferArrayDynamicIndexing: %s",features.shaderStorageBufferArrayDynamicIndexing ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderStorageImageArrayDynamicIndexing: %s",features.shaderStorageImageArrayDynamicIndexing ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderClipDistance: %s",features.shaderClipDistance ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderCullDistance: %s",features.shaderCullDistance ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderFloat64: %s",features.shaderFloat64 ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderInt64: %s",features.shaderInt64 ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderInt16: %s",features.shaderInt16 ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderResourceResidency: %s",features.shaderResourceResidency ? "YES" : "NO");
+      SYSTEM_LOG_INFO("shaderResourceMinLod: %s",features.shaderResourceMinLod ? "YES" : "NO");
+      SYSTEM_LOG_INFO("sparseBinding: %s",features.sparseBinding ? "YES" : "NO");
+      SYSTEM_LOG_INFO("sparseResidencyBuffer: %s",features.sparseResidencyBuffer ? "YES" : "NO");
+      SYSTEM_LOG_INFO("sparseResidencyImage2D: %s",features.sparseResidencyImage2D ? "YES" : "NO");
+      SYSTEM_LOG_INFO("sparseResidencyImage3D: %s",features.sparseResidencyImage3D ? "YES" : "NO");
+      SYSTEM_LOG_INFO("sparseResidency2Samples: %s",features.sparseResidency2Samples ? "YES" : "NO");
+      SYSTEM_LOG_INFO("sparseResidency4Samples: %s",features.sparseResidency4Samples ? "YES" : "NO");
+      SYSTEM_LOG_INFO("sparseResidency8Samples: %s",features.sparseResidency8Samples ? "YES" : "NO");
+      SYSTEM_LOG_INFO("sparseResidency16Samples: %s",features.sparseResidency16Samples ? "YES" : "NO");
+      SYSTEM_LOG_INFO("sparseResidencyAliased: %s",features.sparseResidencyAliased ? "YES" : "NO");
+      SYSTEM_LOG_INFO("variableMultisampleRate: %s",features.variableMultisampleRate ? "YES" : "NO");
+      SYSTEM_LOG_INFO("inheritedQueries: %s",features.inheritedQueries ? "YES" : "NO");
+      SYSTEM_LOG_INFO("--------------------------------------------");
+      SYSTEM_LOG_INFO("SUPPORTED EXTENSIONS");
 
       //extensions
       for (auto & ext : extensions) {
-         SystemLogger::get().info("%s", ext.c_str());
+         SYSTEM_LOG_INFO("%s", ext.c_str());
       }
    }
 
@@ -386,6 +533,7 @@ class RenderContextVulkan {
    VkInstance  mVkInstance = nullptr;
    VkPhysicalDevice mPhysicalDevice = nullptr;
    VkDevice    mVkDevice = nullptr;
+   QueueFamilyIndex mQueueIndices{};
    static std::atomic<unsigned> mInstanceCount;
 };
 
