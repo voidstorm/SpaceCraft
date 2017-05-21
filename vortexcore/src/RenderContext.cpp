@@ -30,7 +30,15 @@ void Vt::Gfx::RenderContext::init() {
             auto physicalDevice= mVkContext->enumerateAndSelectDevice(Vt::Gfx::DeviceSelectionVulkan::AUTO_SELECT);
             //next we create a logical device
             if (physicalDevice) {
-               mVkContext->createDevice(physicalDevice);
+               QueueCreationInfo queueCreateInfo{};
+               queueCreateInfo.mGfxQueueCount = QueueCreationInfo::QueueCount::_1;
+               queueCreateInfo.mGfxQueueExclusive = false;
+               queueCreateInfo.mComputeQueueCount = QueueCreationInfo::QueueCount::_1;
+               queueCreateInfo.mComputeQueueExclusive = true;
+               queueCreateInfo.mTransferQueueCount = QueueCreationInfo::QueueCount::_1;
+               queueCreateInfo.mTransferQueueExclusive = true;
+
+               mVkContext->createDevice(physicalDevice, queueCreateInfo);
             }
          }
       } catch (const std::exception& e) {

@@ -44,6 +44,7 @@ struct DevicePropertiesVulkan {
    VkPhysicalDeviceMemoryProperties mDeviceMemoryProperties{};
    std::vector<VkQueueFamilyProperties> mDeviceQueueFamilyProperties;
    std::vector<std::string> mExtensions;
+   bool mDebugMarkers = false;
 };
 
 struct QueueCreationInfo {
@@ -93,6 +94,10 @@ class RenderContextVulkan {
       mInstanceCount--;
       if (mInstanceCount == 0) {
          //release vulkan instance and device
+         if (mVkDevice) {
+            vkDestroyDevice(mVkDevice, nullptr);
+            mVkDevice = nullptr;
+         }
          if (mVkInstance) {
             vkDestroyInstance(mVkInstance, nullptr);
             mVkInstance = nullptr;
@@ -326,6 +331,7 @@ class RenderContextVulkan {
    // Creates a logical device
    VkDevice createDevice(const VkPhysicalDevice device, const QueueCreationInfo & queueCreateInfo) {
 
+      mQueueConfiguration = queueCreateInfo;
       std::vector<VkDeviceQueueCreateInfo> queueCreateInfos{};
 
       // Get queue family indices for the requested queue family types
@@ -334,83 +340,105 @@ class RenderContextVulkan {
       const float defaultQueuePriority(0.0f);
 
       // Graphics queue
-      if (requestedQueueTypes & VK_QUEUE_GRAPHICS_BIT) {
-         queueFamilyIndices.graphics = getQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT);
+      if ((int)queueCreateInfo.mGfxQueueCount > 0 ) {
+         mQueueIndices.mGraphics = getQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT);
          VkDeviceQueueCreateInfo queueInfo{};
          queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-         queueInfo.queueFamilyIndex = queueFamilyIndices.graphics;
-         queueInfo.queueCount = 1;
+         queueInfo.queueFamilyIndex = mQueueIndices.mGraphics;
+         queueInfo.queueCount = queueCreateInfo.mGfxQueueCount != QueueCreationInfo::QueueCount::MAX ? (int)queueCreateInfo.mGfxQueueCount : 
+                                                                  mDeviceProperties.mDeviceQueueFamilyProperties[mQueueIndices.mGraphics].queueCount;
          queueInfo.pQueuePriorities = &defaultQueuePriority;
          queueCreateInfos.push_back(queueInfo);
+         mQueueConfiguration.mGfxQueueCount = (QueueCreationInfo::QueueCount)queueInfo.queueCount;
       } else {
-         queueFamilyIndices.graphics = VK_NULL_HANDLE;
+         mQueueIndices.mGraphics = VK_NULL_HANDLE;
+         SYSTEM_LOG_ERROR("RenderContextVulkan::createDevice: Could not find a matching queue index for GfxQueue!");
+         VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::createDevice: Could not find a matching queue index for GfxQueue!");
       }
 
       // Dedicated compute queue
-      if (requestedQueueTypes & VK_QUEUE_COMPUTE_BIT) {
-         queueFamilyIndices.compute = getQueueFamilyIndex(VK_QUEUE_COMPUTE_BIT);
-         if (queueFamilyIndices.compute != queueFamilyIndices.graphics) {
+      if ((int)queueCreateInfo.mComputeQueueCount > 0) {
+         mQueueIndices.mCompute = getQueueFamilyIndex(VK_QUEUE_COMPUTE_BIT);
+         if (mQueueIndices.mCompute != mQueueIndices.mGraphics && queueCreateInfo.mComputeQueueExclusive) {
             // If compute family index differs, we need an additional queue create info for the compute queue
             VkDeviceQueueCreateInfo queueInfo{};
             queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queueInfo.queueFamilyIndex = queueFamilyIndices.compute;
-            queueInfo.queueCount = 1;
+            queueInfo.queueFamilyIndex = mQueueIndices.mCompute;
+            queueInfo.queueCount = queueCreateInfo.mComputeQueueCount != QueueCreationInfo::QueueCount::MAX ? (int)queueCreateInfo.mComputeQueueCount :
+                                                                     mDeviceProperties.mDeviceQueueFamilyProperties[mQueueIndices.mCompute].queueCount;
             queueInfo.pQueuePriorities = &defaultQueuePriority;
             queueCreateInfos.push_back(queueInfo);
+            mQueueConfiguration.mComputeQueueCount = (QueueCreationInfo::QueueCount)queueInfo.queueCount;
+            mQueueConfiguration.mComputeQueueExclusive = true;
          }
-      } else {
+      } else if(mQueueIndices.mCompute == mQueueIndices.mGraphics && !queueCreateInfo.mComputeQueueExclusive){
          // Else we use the same queue
-         queueFamilyIndices.compute = queueFamilyIndices.graphics;
+         mQueueIndices.mCompute = mQueueIndices.mGraphics;
+         mQueueConfiguration.mComputeQueueExclusive = false;
+      }
+      else {
+         mQueueIndices.mCompute = mQueueIndices.mGraphics;
+         mQueueConfiguration.mComputeQueueExclusive = false;
+         SYSTEM_LOG_WARN("RenderContextVulkan::createDevice: Exclusive compute queue requested, but not available, using gfx queue instead!");
       }
 
       // Dedicated transfer queue
-      if (requestedQueueTypes & VK_QUEUE_TRANSFER_BIT) {
-         queueFamilyIndices.transfer = getQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
-         if ((queueFamilyIndices.transfer != queueFamilyIndices.graphics) && (queueFamilyIndices.transfer != queueFamilyIndices.compute)) {
+      if ((int)queueCreateInfo.mTransferQueueCount > 0) {
+         mQueueIndices.mTransfer = getQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
+         if (mQueueIndices.mTransfer != mQueueIndices.mGraphics && queueCreateInfo.mTransferQueueExclusive) {
             // If compute family index differs, we need an additional queue create info for the compute queue
             VkDeviceQueueCreateInfo queueInfo{};
             queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queueInfo.queueFamilyIndex = queueFamilyIndices.transfer;
-            queueInfo.queueCount = 1;
+            queueInfo.queueFamilyIndex = mQueueIndices.mTransfer;
+            queueInfo.queueCount = queueCreateInfo.mTransferQueueCount != QueueCreationInfo::QueueCount::MAX ? (int)queueCreateInfo.mTransferQueueCount :
+               mDeviceProperties.mDeviceQueueFamilyProperties[mQueueIndices.mTransfer].queueCount;
             queueInfo.pQueuePriorities = &defaultQueuePriority;
             queueCreateInfos.push_back(queueInfo);
+            mQueueConfiguration.mTransferQueueCount = (QueueCreationInfo::QueueCount)queueInfo.queueCount;
+            mQueueConfiguration.mTransferQueueExclusive = true;
          }
-      } else {
+      } else if (mQueueIndices.mTransfer == mQueueIndices.mGraphics && !queueCreateInfo.mTransferQueueExclusive) {
          // Else we use the same queue
-         queueFamilyIndices.transfer = queueFamilyIndices.graphics;
+         mQueueIndices.mTransfer = mQueueIndices.mGraphics;
+         mQueueConfiguration.mTransferQueueExclusive = false;
+      } else {
+         mQueueIndices.mTransfer = mQueueIndices.mGraphics;
+         mQueueConfiguration.mTransferQueueExclusive = false;
+         SYSTEM_LOG_WARN("RenderContextVulkan::createDevice: Exclusive transfer queue requested, but not available, using gfx queue instead!");
       }
 
-      // Create the logical device representation
-      std::vector<const char*> deviceExtensions(enabledExtensions);
-      if (useSwapChain) {
-         // If the device will be used for presenting to a display via a swapchain we need to request the swapchain extension
-         deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+      //push all extensions
+      std::vector<const char*> deviceExtensions;
+      for (auto & ext : mDeviceProperties.mExtensions) {
+         // Enable the debug marker extension if it is present (likely meaning a debugging tool is present)
+         if (ext == std::string(VK_EXT_DEBUG_MARKER_EXTENSION_NAME)) {
+            mDeviceProperties.mDebugMarkers = true;
+         }
+         deviceExtensions.push_back(ext.c_str());
       }
 
       VkDeviceCreateInfo deviceCreateInfo = {};
       deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
       deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());;
       deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
-      deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
-
-      // Enable the debug marker extension if it is present (likely meaning a debugging tool is present)
-      if (extensionSupported(VK_EXT_DEBUG_MARKER_EXTENSION_NAME)) {
-         deviceExtensions.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
-         enableDebugMarkers = true;
-      }
+      
+      //deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
+      //we enable all features the device supports
+      deviceCreateInfo.pEnabledFeatures = &mDeviceProperties.mDeviceFeatures;
 
       if (deviceExtensions.size() > 0) {
          deviceCreateInfo.enabledExtensionCount = (uint32_t)deviceExtensions.size();
          deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
       }
 
-      VK_CHECK_RESULT(vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, &logicalDevice));
+      // Create the logical device representation
+      VkDevice logicalDevice;
+      VK_CHECK_RESULT(vkCreateDevice(device, &deviceCreateInfo, nullptr, &logicalDevice));
 
-      // Create a default command pool for graphics command buffers
-      commandPool = createCommandPool(queueFamilyIndices.graphics);
-
+      //// Create a default command pool for graphics command buffers
+      //commandPool = createCommandPool(queueFamilyIndices.graphics);
      
-      return nullptr;
+      return mVkDevice = logicalDevice;
    }
 
    //-----------------------------------------------------------------
@@ -534,6 +562,7 @@ class RenderContextVulkan {
    VkPhysicalDevice mPhysicalDevice = nullptr;
    VkDevice    mVkDevice = nullptr;
    QueueFamilyIndex mQueueIndices{};
+   QueueCreationInfo mQueueConfiguration{};
    static std::atomic<unsigned> mInstanceCount;
 };
 
