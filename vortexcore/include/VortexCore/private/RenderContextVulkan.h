@@ -554,16 +554,18 @@ class RenderContextVulkan {
          SYSTEM_LOG_INFO("%s", ext.c_str());
       }
    }
+   
+   //--------------------------------------------------------------------------
+   //members
+   VkInstance                       mVkInstance = nullptr;
+   VkPhysicalDevice                 mPhysicalDevice = nullptr;
+   VkDevice                         mVkDevice = nullptr;
 
-
-   DevicePropertiesVulkan mDeviceProperties{};
-   RenderContextVulkanSettings mSettings{};
-   VkInstance  mVkInstance = nullptr;
-   VkPhysicalDevice mPhysicalDevice = nullptr;
-   VkDevice    mVkDevice = nullptr;
-   QueueFamilyIndex mQueueIndices{};
-   QueueCreationInfo mQueueConfiguration{};
-   static std::atomic<unsigned> mInstanceCount;
+   DevicePropertiesVulkan           mDeviceProperties{};
+   RenderContextVulkanSettings      mSettings{};
+   QueueFamilyIndex                 mQueueIndices{};
+   QueueCreationInfo                mQueueConfiguration{};
+   static std::atomic<unsigned>     mInstanceCount;
 };
 
 std::atomic<unsigned> RenderContextVulkan::mInstanceCount = 0;
