@@ -346,8 +346,8 @@ class RenderContextVulkan {
       // Note that the indices may overlap depending on the implementation
 
       const float defaultQueuePriorityGfx[(uint64_t)QueueCreationInfo::QueueCount::MAX] = {};
-      const float defaultQueueCompute[(uint64_t)QueueCreationInfo::QueueCount::MAX] = {};
-      const float defaultQueueTransfer[(uint64_t)QueueCreationInfo::QueueCount::MAX] = {};
+      const float defaultQueuePriorityCompute[(uint64_t)QueueCreationInfo::QueueCount::MAX] = {};
+      const float defaultQueuePriorityTransfer[(uint64_t)QueueCreationInfo::QueueCount::MAX] = {};
 
       // Graphics queue
       if ((int)queueCreateInfo.mGfxQueueCount > 0 ) {
@@ -376,7 +376,7 @@ class RenderContextVulkan {
             queueInfo.queueFamilyIndex = mQueueIndices.mCompute;
             queueInfo.queueCount = queueCreateInfo.mComputeQueueCount != QueueCreationInfo::QueueCount::MAX ? (int)queueCreateInfo.mComputeQueueCount :
                                                                      mDeviceProperties.mDeviceQueueFamilyProperties[mQueueIndices.mCompute].queueCount;
-            queueInfo.pQueuePriorities = defaultQueueCompute;
+            queueInfo.pQueuePriorities = defaultQueuePriorityCompute;
             queueCreateInfos.push_back(queueInfo);
             mQueueConfiguration.mComputeQueueCount = (QueueCreationInfo::QueueCount)queueInfo.queueCount;
             mQueueConfiguration.mComputeQueueExclusive = true;
@@ -402,7 +402,7 @@ class RenderContextVulkan {
             queueInfo.queueFamilyIndex = mQueueIndices.mTransfer;
             queueInfo.queueCount = queueCreateInfo.mTransferQueueCount != QueueCreationInfo::QueueCount::MAX ? (int)queueCreateInfo.mTransferQueueCount :
                mDeviceProperties.mDeviceQueueFamilyProperties[mQueueIndices.mTransfer].queueCount;
-            queueInfo.pQueuePriorities = defaultQueueTransfer;
+            queueInfo.pQueuePriorities = defaultQueuePriorityTransfer;
             queueCreateInfos.push_back(queueInfo);
             mQueueConfiguration.mTransferQueueCount = (QueueCreationInfo::QueueCount)queueInfo.queueCount;
             mQueueConfiguration.mTransferQueueExclusive = true;
