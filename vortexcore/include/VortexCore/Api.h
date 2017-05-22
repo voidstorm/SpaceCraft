@@ -34,7 +34,7 @@
 { \
    auto result = (x); \
       if (result != VkResult::VK_SUCCESS) { \
-         SystemLogger::get().info("Failed to create instance with error: %s", VkErrorHelper::vkResultToStr(result).c_str()); \
+         SystemLogger::get().error("Failed to create instance with error: %s", VkErrorHelper::vkResultToStr(result).c_str()); \
       } \
 } 
 

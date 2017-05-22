@@ -80,7 +80,7 @@ class RenderContextVulkan {
    //--------------------------------------------------------------------------
    // Ctor, creates a vk instance
    RenderContextVulkan(const RenderContextVulkanSettings &settings) :
-      mSettings(settings) {
+      mContextSettings(settings) {
       mVkInstance = getVkInstance();
       if (!mVkInstance) {
          VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::RenderContextVulkan: Could not create vulkan instance!");
@@ -100,6 +100,9 @@ class RenderContextVulkan {
             SYSTEM_LOG_INFO("Vulkan Device released!");
          }
          if (mVkInstance) {
+            if (sMsgCallback != VK_NULL_HANDLE) {
+               DestroyDebugReportCallback(mVkInstance, sMsgCallback, nullptr);
+            }
             vkDestroyInstance(mVkInstance, nullptr);
             mVkInstance = nullptr;
             SYSTEM_LOG_INFO("Vulkan Instance released!");
@@ -121,7 +124,7 @@ class RenderContextVulkan {
 
          //instance extension
          std::vector<const char*> instanceExtensions = { VK_KHR_SURFACE_EXTENSION_NAME,
-                                                           VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+                                                          VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 
          //instance info
          VkInstanceCreateInfo instanceInfo = {};
@@ -130,37 +133,53 @@ class RenderContextVulkan {
          instanceInfo.pApplicationInfo = &appInfo;
 
          //debugging and validation support
-         if (instanceExtensions.size() > 0) {
-            if (mSettings.mValidation >= RenderContextVulkanSettings::ValidationFlags::STANDARD) {
-               instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-            }
-
-            instanceInfo.enabledExtensionCount = (uint32_t)instanceExtensions.size();
-            instanceInfo.ppEnabledExtensionNames = instanceExtensions.data();
-         }
-
-         if (mSettings.mValidation == RenderContextVulkanSettings::ValidationFlags::STANDARD) {
+         if (mContextSettings.mValidation == RenderContextVulkanSettings::ValidationFlags::STANDARD) {
             int32_t  validationLayerCount = 2;
             const char *validationLayerNames[] = {
                "VK_LAYER_LUNARG_standard_validation",
                "VK_LAYER_LUNARG_monitor"
             };
-
+            instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
             instanceInfo.enabledLayerCount = validationLayerCount;
             instanceInfo.ppEnabledLayerNames = validationLayerNames;
-         } else if (mSettings.mValidation == RenderContextVulkanSettings::ValidationFlags::ALL) {
+         } else if (mContextSettings.mValidation == RenderContextVulkanSettings::ValidationFlags::ALL) {
             int32_t validationLayerCount = 2;
             const char *validationLayerNames[] = {
                "VK_LAYER_LUNARG_standard_validation",
                "VK_LAYER_LUNARG_monitor"
             };
-
+            instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
             instanceInfo.enabledLayerCount = validationLayerCount;
             instanceInfo.ppEnabledLayerNames = validationLayerNames;
          }
 
+         if (instanceExtensions.size() > 0) {
+            instanceInfo.enabledExtensionCount = (uint32_t)instanceExtensions.size();
+            instanceInfo.ppEnabledExtensionNames = instanceExtensions.data();
+         }
+
+         //create instance
          VkInstance instance = nullptr;
          VK_CHECK_RESULT(vkCreateInstance(&instanceInfo, nullptr, &instance));
+
+
+         //setup validation layer callbacks
+         if (mContextSettings.mValidation > RenderContextVulkanSettings::ValidationFlags::NONE) {
+
+            CreateDebugReportCallback = reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT"));
+            DestroyDebugReportCallback = reinterpret_cast<PFN_vkDestroyDebugReportCallbackEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT"));
+            dbgBreakCallback = reinterpret_cast<PFN_vkDebugReportMessageEXT>(vkGetInstanceProcAddr(instance, "vkDebugReportMessageEXT"));
+
+            VkDebugReportCallbackCreateInfoEXT createInfo = {};
+            createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+            createInfo.flags = mContextSettings.mValidation == RenderContextVulkanSettings::ValidationFlags::STANDARD ?
+               VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT :
+               VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
+            createInfo.pfnCallback = (PFN_vkDebugReportCallbackEXT)&RenderContextVulkan::sValidationLayerCallback;
+            createInfo.pUserData = reinterpret_cast<void*>(this);
+
+            VK_CHECK_RESULT(CreateDebugReportCallback(instance, &createInfo, nullptr, &sMsgCallback));
+         }
 
          SYSTEM_LOG_INFO("Created Instance with enabled layers:");
          for (int i = 0; i < (int)instanceInfo.enabledLayerCount; ++i){
@@ -577,7 +596,69 @@ class RenderContextVulkan {
          SYSTEM_LOG_INFO("%s", ext.c_str());
       }
    }
-   
+
+   //--------------------------------------------------------------------------
+   //members
+   static VKAPI_ATTR VkBool32 VKAPI_CALL validationLayerCallback(
+      VkDebugReportFlagsEXT flags,
+      VkDebugReportObjectTypeEXT objType,
+      uint64_t obj,
+      size_t location,
+      int32_t code,
+      const char* layerPrefix,
+      const char* msg) {
+
+      // Error that may result in undefined behaviour
+      if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) {
+         SYSTEM_LOG_ERROR("%s, code: %d, msg: %s", layerPrefix, code, msg);
+      };
+      // Warnings may hint at unexpected / non-spec API usage
+      if (flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) {
+         SYSTEM_LOG_WARN("%s, code: %d, msg: %s", layerPrefix, code, msg);
+      };
+      // May indicate sub-optimal usage of the API
+      if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) {
+         SYSTEM_LOG_WARN("%s, code: %d, msg: %s", layerPrefix, code, msg);
+      };
+      // Informal messages that may become handy during debugging
+      if (flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) {
+         SYSTEM_LOG_INFO("%s, code: %d, msg: %s", layerPrefix, code, msg);
+      }
+      // Diagnostic info from the Vulkan loader and layers
+      // Usually not helpful in terms of API usage, but may help to debug layer and loader problems 
+      if (flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT) {
+         SYSTEM_LOG_INFO("%s, code: %d, msg: %s", layerPrefix, code, msg);
+      }
+      return VK_TRUE;
+   }
+
+
+   //--------------------------------------------------------------------------
+   //members
+   static VKAPI_ATTR VkBool32 VKAPI_CALL sValidationLayerCallback(
+      VkDebugReportFlagsEXT flags,
+      VkDebugReportObjectTypeEXT objType,
+      uint64_t obj,
+      size_t location,
+      int32_t code,
+      const char* layerPrefix,
+      const char* msg,
+      void* userData) {
+      return reinterpret_cast<Vt::Gfx::RenderContextVulkan*>(userData)->validationLayerCallback(flags,
+         objType,
+         obj,
+         location,
+         code,
+         layerPrefix,
+         msg);
+   }
+
+   static PFN_vkCreateDebugReportCallbackEXT CreateDebugReportCallback;
+   static PFN_vkDestroyDebugReportCallbackEXT DestroyDebugReportCallback;
+   static PFN_vkDebugReportMessageEXT dbgBreakCallback;
+
+   static VkDebugReportCallbackEXT sMsgCallback;
+
    //--------------------------------------------------------------------------
    //members
    VkInstance                       mVkInstance = nullptr;
@@ -585,13 +666,20 @@ class RenderContextVulkan {
    VkDevice                         mVkDevice = nullptr;
 
    DevicePropertiesVulkan           mDeviceProperties{};
-   RenderContextVulkanSettings      mSettings{};
+   RenderContextVulkanSettings      mContextSettings{};
    QueueFamilyIndex                 mQueueIndices{};
    QueueCreationInfo                mQueueConfiguration{};
    static std::atomic<unsigned>     mInstanceCount;
 };
 
 std::atomic<unsigned> RenderContextVulkan::mInstanceCount = 0;
+
+PFN_vkCreateDebugReportCallbackEXT RenderContextVulkan::CreateDebugReportCallback = VK_NULL_HANDLE;
+PFN_vkDestroyDebugReportCallbackEXT RenderContextVulkan::DestroyDebugReportCallback = VK_NULL_HANDLE;
+PFN_vkDebugReportMessageEXT RenderContextVulkan::dbgBreakCallback = VK_NULL_HANDLE;
+VkDebugReportCallbackEXT RenderContextVulkan::sMsgCallback= VK_NULL_HANDLE;
+
+
 
 }
 }
