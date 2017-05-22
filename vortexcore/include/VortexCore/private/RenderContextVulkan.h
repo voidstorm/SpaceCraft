@@ -97,10 +97,12 @@ class RenderContextVulkan {
          if (mVkDevice) {
             vkDestroyDevice(mVkDevice, nullptr);
             mVkDevice = nullptr;
+            SYSTEM_LOG_INFO("Vulkan Device released!");
          }
          if (mVkInstance) {
             vkDestroyInstance(mVkInstance, nullptr);
             mVkInstance = nullptr;
+            SYSTEM_LOG_INFO("Vulkan Instance released!");
          }
       }
    }
@@ -159,6 +161,12 @@ class RenderContextVulkan {
 
          VkInstance instance = nullptr;
          VK_CHECK_RESULT(vkCreateInstance(&instanceInfo, nullptr, &instance));
+
+         SYSTEM_LOG_INFO("Created Instance with enabled layers:");
+         for (int i = 0; i < (int)instanceInfo.enabledLayerCount; ++i){
+             SYSTEM_LOG_INFO("%s", instanceInfo.ppEnabledLayerNames[i]);
+         }
+
          return instance;
       };
 
