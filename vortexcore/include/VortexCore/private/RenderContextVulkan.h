@@ -139,7 +139,6 @@ class RenderContextVulkan {
    static PFN_vkDestroyDebugReportCallbackEXT DestroyDebugReportCallback;
    static PFN_vkDebugReportMessageEXT dbgBreakCallback;
 
-   static VkDebugReportCallbackEXT sMsgCallback;
 
    //--------------------------------------------------------------------------
    //members
@@ -151,6 +150,8 @@ class RenderContextVulkan {
    RenderContextVulkanSettings      mContextSettings{};
    QueueFamilyIndex                 mQueueIndices{};
    QueueCreationInfo                mQueueConfiguration{};
+
+   static VkDebugReportCallbackEXT sMsgCallback;
    static std::atomic<unsigned>     mInstanceCount;
 };
 

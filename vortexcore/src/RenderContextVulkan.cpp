@@ -58,7 +58,7 @@ VkInstance Vt::Gfx::RenderContextVulkan::getVkInstance() {
 
       //instance extension
       std::vector<const char*> instanceExtensions = { VK_KHR_SURFACE_EXTENSION_NAME,
-         VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+                                                      VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 
       //instance info
       VkInstanceCreateInfo instanceInfo = {};
