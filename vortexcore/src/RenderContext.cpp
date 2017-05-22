@@ -31,11 +31,11 @@ void Vt::Gfx::RenderContext::init() {
             //next we create a logical device
             if (physicalDevice) {
                QueueCreationInfo queueCreateInfo{};
-               queueCreateInfo.mGfxQueueCount = QueueCreationInfo::QueueCount::_1;
+               queueCreateInfo.mGfxQueueCount = QueueCreationInfo::QueueCount::MAX;
                queueCreateInfo.mGfxQueueExclusive = false;
-               queueCreateInfo.mComputeQueueCount = QueueCreationInfo::QueueCount::_1;
+               queueCreateInfo.mComputeQueueCount = QueueCreationInfo::QueueCount::MAX;
                queueCreateInfo.mComputeQueueExclusive = true;
-               queueCreateInfo.mTransferQueueCount = QueueCreationInfo::QueueCount::_1;
+               queueCreateInfo.mTransferQueueCount = QueueCreationInfo::QueueCount::MAX;
                queueCreateInfo.mTransferQueueExclusive = true;
 
                mVkContext->createDevice(physicalDevice, queueCreateInfo);

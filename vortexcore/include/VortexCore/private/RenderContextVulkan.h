@@ -435,9 +435,22 @@ class RenderContextVulkan {
       VkDevice logicalDevice;
       VK_CHECK_RESULT(vkCreateDevice(device, &deviceCreateInfo, nullptr, &logicalDevice));
 
+      SYSTEM_LOG_INFO("-----------------------------------------------------------------------");
+      SYSTEM_LOG_INFO("Created device with queue configuration:");
+      SYSTEM_LOG_INFO("Graphics Queue Idx: %d", mQueueIndices.mGraphics);
+      SYSTEM_LOG_INFO("Graphics Queue Count: %d", mQueueConfiguration.mGfxQueueCount);
+      SYSTEM_LOG_INFO("Graphics Queue Exclusive: %s", mQueueConfiguration.mGfxQueueExclusive ? "YES" : "NO");
+
+      SYSTEM_LOG_INFO("Compute Queue Idx: %d", mQueueIndices.mCompute);
+      SYSTEM_LOG_INFO("Compute Queue Count: %d", mQueueConfiguration.mComputeQueueCount);
+      SYSTEM_LOG_INFO("Compute Queue Exclusive: %s", mQueueConfiguration.mComputeQueueExclusive ? "YES" : "NO");
+
+      SYSTEM_LOG_INFO("Transfer Queue Idx: %d", mQueueIndices.mTransfer);
+      SYSTEM_LOG_INFO("Transfer Queue Count: %d", mQueueConfiguration.mTransferQueueCount);
+      SYSTEM_LOG_INFO("Transfer Queue Exclusive: %s", mQueueConfiguration.mTransferQueueExclusive ? "YES" : "NO");
+
       //// Create a default command pool for graphics command buffers
-      //commandPool = createCommandPool(queueFamilyIndices.graphics);
-     
+      //commandPool = createCommandPool(queueFamilyIndices.graphics); 
       return mVkDevice = logicalDevice;
    }
 
