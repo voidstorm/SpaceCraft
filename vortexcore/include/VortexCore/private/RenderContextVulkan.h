@@ -55,7 +55,7 @@ struct QueueCreationInfo {
       _4,
       _5,
       _7,
-      MAX = 100
+      MAX = 16
    };
    QueueCount mGfxQueueCount = QueueCount::_1;
    QueueCount mComputeQueueCount = QueueCount::_1;
@@ -345,7 +345,9 @@ class RenderContextVulkan {
       // Get queue family indices for the requested queue family types
       // Note that the indices may overlap depending on the implementation
 
-      const float defaultQueuePriority(0.0f);
+      const float defaultQueuePriorityGfx[(uint64_t)QueueCreationInfo::QueueCount::MAX] = {};
+      const float defaultQueueCompute[(uint64_t)QueueCreationInfo::QueueCount::MAX] = {};
+      const float defaultQueueTransfer[(uint64_t)QueueCreationInfo::QueueCount::MAX] = {};
 
       // Graphics queue
       if ((int)queueCreateInfo.mGfxQueueCount > 0 ) {
@@ -355,7 +357,7 @@ class RenderContextVulkan {
          queueInfo.queueFamilyIndex = mQueueIndices.mGraphics;
          queueInfo.queueCount = queueCreateInfo.mGfxQueueCount != QueueCreationInfo::QueueCount::MAX ? (int)queueCreateInfo.mGfxQueueCount : 
                                                                   mDeviceProperties.mDeviceQueueFamilyProperties[mQueueIndices.mGraphics].queueCount;
-         queueInfo.pQueuePriorities = &defaultQueuePriority;
+         queueInfo.pQueuePriorities = defaultQueuePriorityGfx;
          queueCreateInfos.push_back(queueInfo);
          mQueueConfiguration.mGfxQueueCount = (QueueCreationInfo::QueueCount)queueInfo.queueCount;
       } else {
@@ -374,7 +376,7 @@ class RenderContextVulkan {
             queueInfo.queueFamilyIndex = mQueueIndices.mCompute;
             queueInfo.queueCount = queueCreateInfo.mComputeQueueCount != QueueCreationInfo::QueueCount::MAX ? (int)queueCreateInfo.mComputeQueueCount :
                                                                      mDeviceProperties.mDeviceQueueFamilyProperties[mQueueIndices.mCompute].queueCount;
-            queueInfo.pQueuePriorities = &defaultQueuePriority;
+            queueInfo.pQueuePriorities = defaultQueueCompute;
             queueCreateInfos.push_back(queueInfo);
             mQueueConfiguration.mComputeQueueCount = (QueueCreationInfo::QueueCount)queueInfo.queueCount;
             mQueueConfiguration.mComputeQueueExclusive = true;
@@ -400,7 +402,7 @@ class RenderContextVulkan {
             queueInfo.queueFamilyIndex = mQueueIndices.mTransfer;
             queueInfo.queueCount = queueCreateInfo.mTransferQueueCount != QueueCreationInfo::QueueCount::MAX ? (int)queueCreateInfo.mTransferQueueCount :
                mDeviceProperties.mDeviceQueueFamilyProperties[mQueueIndices.mTransfer].queueCount;
-            queueInfo.pQueuePriorities = &defaultQueuePriority;
+            queueInfo.pQueuePriorities = defaultQueueTransfer;
             queueCreateInfos.push_back(queueInfo);
             mQueueConfiguration.mTransferQueueCount = (QueueCreationInfo::QueueCount)queueInfo.queueCount;
             mQueueConfiguration.mTransferQueueExclusive = true;
