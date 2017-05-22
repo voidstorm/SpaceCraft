@@ -40,6 +40,8 @@ void Vt::Gfx::RenderContext::init() {
 
                mVkContext->createDevice(physicalDevice, queueCreateInfo);
             }
+            //once we have a device we need to create command pools
+
          }
       } catch (const std::exception& e) {
          VT_EXCEPT_RT(RenderContextException, "RenderContext::init: Could not init render context!", e);

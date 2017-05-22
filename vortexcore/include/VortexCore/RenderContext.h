@@ -33,16 +33,17 @@ struct RenderContextLayout {
 class VORTEX_API RenderContext {
 public:
    RenderContext(const std::shared_ptr<Vt::App::AppWindow> &window, const RenderContextLayout &layout);
-   virtual ~RenderContext();
-   virtual void init();
-   virtual bool swapBuffers();
-   virtual bool toggleFullscreen();
-   virtual std::weak_ptr<Vt::App::AppWindow> window() const;
-   virtual const RenderContextLayout& layout() const;
-protected:
-   virtual bool createSwapChain();
-   virtual bool restoreSwapChain();
-   virtual void resizeSwapChain(unsigned width, unsigned height);
+   ~RenderContext();
+   void init();
+   bool swapBuffers();
+   bool toggleFullscreen();
+   std::weak_ptr<Vt::App::AppWindow> window() const;
+   const RenderContextLayout& layout() const;
+
+private:
+   bool createSwapChain();
+   bool restoreSwapChain();
+   void resizeSwapChain(unsigned width, unsigned height);
 
 private:
    std::unique_ptr<RenderContextVulkan> mVkContext;

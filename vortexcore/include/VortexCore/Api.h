@@ -8,7 +8,9 @@
 #define V(x) 
 #endif
 
-#define LOGGING_ON 
+#define LOGGING_ON
+ 
+
 
 #ifdef _WIN32
 #pragma warning( disable : 4251 )

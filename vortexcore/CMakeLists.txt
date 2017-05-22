@@ -94,6 +94,7 @@ set(SOURCE_FILES
   src/Mesh.cpp
   src/MeshComponent.cpp
   src/RenderContext.cpp
+  src/RenderContextVulkan.cpp
   src/Scene.cpp
   src/SceneGraph.cpp
   src/SceneManager.cpp
