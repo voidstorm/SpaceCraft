@@ -19,5 +19,6 @@ namespace Vt {
         class SceneObject;
         class Component;
         class TransformCache;
+    
     }
 }
