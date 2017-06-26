@@ -20,35 +20,18 @@ public:
 
 class RenderContextVulkan;
 
-struct RenderContextLayout {
-   int width;
-   int height;
-   int screen;
-   bool fullscreen;
-   int depth;
-   int stencil;
-   int multisample;
-};
+
 
 class VORTEX_API RenderContext {
 public:
-   RenderContext(const std::shared_ptr<Vt::App::AppWindow> &window, const RenderContextLayout &layout);
+   RenderContext(/*const std::shared_ptr<Vt::App::AppWindow> &window, const RenderContextLayout &layout*/);
    ~RenderContext();
    void init();
-   bool swapBuffers();
-   bool toggleFullscreen();
-   std::weak_ptr<Vt::App::AppWindow> window() const;
-   const RenderContextLayout& layout() const;
 
-private:
-   bool createSwapChain();
-   bool restoreSwapChain();
-   void resizeSwapChain(unsigned width, unsigned height);
 
 private:
    std::unique_ptr<RenderContextVulkan> mVkContext;
    std::shared_ptr<Vt::App::AppWindow> mWindow;
-   RenderContextLayout mLayout;
 };
 }
 }
