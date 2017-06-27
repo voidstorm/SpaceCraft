@@ -37,7 +37,7 @@ void Vt::Gfx::RenderContext::init() {
                queueCreateInfo.mComputeQueueExclusive = true;
                queueCreateInfo.mTransferQueueCount = QueueCreationInfo::QueueCount::MAX;
                queueCreateInfo.mTransferQueueExclusive = true;
-               
+
                mVkContext->createDevice(physicalDevice, queueCreateInfo);
             }
             //once we have a device we need to create command pools

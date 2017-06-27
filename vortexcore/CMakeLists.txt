@@ -65,7 +65,6 @@ set(PUBLIC_HEADER_FILES
   include/VortexCore/SceneObject.h
   include/VortexCore/ScopedTimer.h
   include/VortexCore/ScopedWaitTimer.h
-  include/VortexCore/Screen.h
   include/VortexCore/SystemLogger.h
   include/VortexCore/ThreadContext.h
   include/VortexCore/ThreadMap.h  
@@ -100,7 +99,6 @@ set(SOURCE_FILES
   src/SceneGraph.cpp
   src/SceneManager.cpp
   src/SceneObject.cpp
-  src/Screen.cpp
   src/TransformCache.cpp
   src/VortexCore.cpp
 )

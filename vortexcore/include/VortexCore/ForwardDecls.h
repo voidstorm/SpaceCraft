@@ -10,7 +10,6 @@ namespace Vt {
     }
     namespace Gfx {
         class RenderContext;
-        class Screen;
     }
 
     namespace Scene {
