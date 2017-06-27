@@ -1,4 +1,5 @@
 #include "..\include\VortexCore\private\RenderContextVulkan.h"
+#include "..\include\VortexCore\AppWindow.h"
 
 
 std::atomic<unsigned>  Vt::Gfx::RenderContextVulkan::mInstanceCount = 0;
@@ -253,14 +254,13 @@ VkPhysicalDevice Vt::Gfx::RenderContextVulkan::enumerateAndSelectDevice(const De
    return mPhysicalDevice = selectedDevice;
 }
 
-uint32_t Vt::Gfx::RenderContextVulkan::getQueueFamilyIndex(const VkQueueFlagBits queueFlags) {
+uint32_t Vt::Gfx::RenderContextVulkan::findQueueFamilyIndex(const VkQueueFlagBits queueFlags) {
    // Dedicated queue for compute
    // Try to find a queue family index that supports compute but not graphics
    if (queueFlags & VK_QUEUE_COMPUTE_BIT) {
       for (uint32_t i = 0; i < static_cast<uint32_t>(mDeviceProperties.mDeviceQueueFamilyProperties.size()); i++) {
          if ((mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & queueFlags) && ((mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)) {
             return i;
-            break;
          }
       }
    }
@@ -273,7 +273,6 @@ uint32_t Vt::Gfx::RenderContextVulkan::getQueueFamilyIndex(const VkQueueFlagBits
             ((mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) &&
             ((mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) == 0)) {
             return i;
-            break;
          }
       }
    }
@@ -282,11 +281,28 @@ uint32_t Vt::Gfx::RenderContextVulkan::getQueueFamilyIndex(const VkQueueFlagBits
    for (uint32_t i = 0; i < static_cast<uint32_t>(mDeviceProperties.mDeviceQueueFamilyProperties.size()); i++) {
       if (mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & queueFlags) {
          return i;
-         break;
       }
    }
    SYSTEM_LOG_ERROR("RenderContextVulkan::getQueueFamilyIndex: Could not find a matching queue index!");
    VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::getQueueFamilyIndex: Could not find a matching queue index!");
+   return 0;
+}
+
+//-----------------------------------------------------------------
+//
+uint32_t Vt::Gfx::RenderContextVulkan::findPresentQueueFamilyIndex() {
+   // Try to find a queue family index that supports compute but not graphics
+   int fall_back_device = -1;
+   for (uint32_t i = 0; i < static_cast<uint32_t>(mDeviceProperties.mDeviceQueueFamilyProperties.size()); i++) {
+      VkBool32 presentSupport = false;
+      vkGetPhysicalDeviceSurfaceSupportKHR(mPhysicalDevice, i, mVkSurface, &presentSupport);
+      if (presentSupport && ((mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)) {
+         return i;
+      } else if (presentSupport) {
+         fall_back_device = i;
+      }
+   }
+   return fall_back_device;
 }
 
 //-----------------------------------------------------------------
@@ -306,7 +322,7 @@ VkDevice Vt::Gfx::RenderContextVulkan::createDevice(const VkPhysicalDevice devic
 
    // Graphics queue
    if ((int)queueCreateInfo.mGfxQueueCount > 0) {
-      mQueueIndices.mGraphics = getQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT);
+      mQueueIndices.mGraphics = findQueueFamilyIndex(VK_QUEUE_GRAPHICS_BIT);
       VkDeviceQueueCreateInfo queueInfo{};
       queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
       queueInfo.queueFamilyIndex = mQueueIndices.mGraphics;
@@ -323,7 +339,7 @@ VkDevice Vt::Gfx::RenderContextVulkan::createDevice(const VkPhysicalDevice devic
 
    // Dedicated compute queue
    if ((int)queueCreateInfo.mComputeQueueCount > 0) {
-      mQueueIndices.mCompute = getQueueFamilyIndex(VK_QUEUE_COMPUTE_BIT);
+      mQueueIndices.mCompute = findQueueFamilyIndex(VK_QUEUE_COMPUTE_BIT);
       if (mQueueIndices.mCompute != mQueueIndices.mGraphics && queueCreateInfo.mComputeQueueExclusive) {
          // If compute family index differs, we need an additional queue create info for the compute queue
          VkDeviceQueueCreateInfo queueInfo{};
@@ -348,7 +364,7 @@ VkDevice Vt::Gfx::RenderContextVulkan::createDevice(const VkPhysicalDevice devic
 
    // Dedicated transfer queue
    if ((int)queueCreateInfo.mTransferQueueCount > 0) {
-      mQueueIndices.mTransfer = getQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
+      mQueueIndices.mTransfer = findQueueFamilyIndex(VK_QUEUE_TRANSFER_BIT);
       if (mQueueIndices.mTransfer != mQueueIndices.mGraphics && queueCreateInfo.mTransferQueueExclusive) {
          // If compute family index differs, we need an additional queue create info for the compute queue
          VkDeviceQueueCreateInfo queueInfo{};
@@ -418,6 +434,19 @@ VkDevice Vt::Gfx::RenderContextVulkan::createDevice(const VkPhysicalDevice devic
    SYSTEM_LOG_INFO("Transfer Queue Exclusive: %s", mQueueConfiguration.mTransferQueueExclusive ? "YES" : "NO");
 
    return mVkDevice = logicalDevice;
+}
+
+//-----------------------------------------------------------------
+//
+VkSurfaceKHR Vt::Gfx::RenderContextVulkan::createSurface(const VkDevice device, const Vt::App::AppWindow & window) {
+
+   VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
+   surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+   surfaceCreateInfo.hinstance = (HINSTANCE)window.instance();
+   surfaceCreateInfo.hwnd = window.winId();
+   VkSurfaceKHR surface{ nullptr };
+   VK_CHECK_RESULT(vkCreateWin32SurfaceKHR(mVkInstance, &surfaceCreateInfo, nullptr, &surface));
+   return surface;
 }
 
 //-----------------------------------------------------------------
@@ -529,6 +558,60 @@ void Vt::Gfx::RenderContextVulkan::logAdapterProperties(const VkPhysicalDevicePr
    for (auto & ext : extensions) {
       SYSTEM_LOG_INFO("%s", ext.c_str());
    }
+}
+
+//--------------------------------------------------------------------------
+//
+uint32_t Vt::Gfx::RenderContextVulkan::getQueueFamilyIndex(Vt::Gfx::QueueType type) const {
+   switch (type) {
+      case Vt::Gfx::QueueType::GRAPHICS:
+         return mQueueIndices.mGraphics;
+         break;
+      case Vt::Gfx::QueueType::COMPUTE:
+         return mQueueIndices.mCompute;
+         break;
+      case Vt::Gfx::QueueType::TRANSFER:
+         return mQueueIndices.mTransfer;
+         break;
+      case Vt::Gfx::QueueType::PRESENT:
+         return mQueueIndices.mPresent;
+         break;
+      default:
+         break;
+   }
+   return 0;
+}
+
+//--------------------------------------------------------------------------
+//
+uint32_t Vt::Gfx::RenderContextVulkan::getQueueCount(QueueType type) const {
+   switch (type) {
+      case Vt::Gfx::QueueType::GRAPHICS:
+         return (uint32_t)mQueueConfiguration.mGfxQueueCount;
+         break;
+      case Vt::Gfx::QueueType::COMPUTE:
+         return (uint32_t)mQueueConfiguration.mComputeQueueCount;
+         break;
+      case Vt::Gfx::QueueType::TRANSFER:
+         return (uint32_t)mQueueConfiguration.mTransferQueueCount;
+         break;
+      default:
+         break;
+   }
+   return 0;
+}
+
+//--------------------------------------------------------------------------
+//
+VkQueue Vt::Gfx::RenderContextVulkan::getDeviceQueue(QueueType type, uint32_t index) const {
+   VkQueue queue = nullptr;
+   uint32_t family_idx = getQueueFamilyIndex(type);
+   if (index > getQueueCount(type)) {
+      SYSTEM_LOG_ERROR("RenderContextVulkan::getDeviceQueue: index > queue count!");
+      VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::getDeviceQueue: index > queue count!");
+   }
+   vkGetDeviceQueue(mVkDevice, family_idx, index, &queue);
+   return queue;
 }
 
 //--------------------------------------------------------------------------

@@ -69,6 +69,14 @@ struct QueueFamilyIndex {
    uint32_t mGraphics = 0;
    uint32_t mCompute = 0;
    uint32_t mTransfer = 0;
+   uint32_t mPresent = 0;
+};
+
+enum class QueueType {
+   GRAPHICS= 0,
+   COMPUTE,
+   TRANSFER,
+   PRESENT
 };
 
 class RenderContextVulkan {
@@ -96,12 +104,19 @@ class RenderContextVulkan {
 
    //-----------------------------------------------------------------
    // Finds the proper queue family index
-   uint32_t getQueueFamilyIndex(const VkQueueFlagBits queueFlags);
+   uint32_t findQueueFamilyIndex(const VkQueueFlagBits queueFlags);
 
+   //-----------------------------------------------------------------
+   // Finds the proper present queue family index
+   uint32_t findPresentQueueFamilyIndex();
 
    //-----------------------------------------------------------------
    // Creates a logical device
    VkDevice createDevice(const VkPhysicalDevice device, const QueueCreationInfo & queueCreateInfo);
+
+   //-----------------------------------------------------------------
+   // Creates a window surface for presentation
+   VkSurfaceKHR createSurface(const VkDevice device, const Vt::App::AppWindow & window);
 
    //-----------------------------------------------------------------
    //log some useful adapter info
@@ -110,6 +125,20 @@ class RenderContextVulkan {
                               const VkPhysicalDeviceFeatures & features,
                               const VkPhysicalDeviceMemoryProperties & memoryInfo,
       const std::vector<std::string> & extensions);
+
+
+   //-----------------------------------------------------------------
+   // Returns the proper queue family index of the created device
+   uint32_t getQueueFamilyIndex(QueueType type) const;
+
+   //-----------------------------------------------------------------
+   // Returns the queue count
+   uint32_t getQueueCount(QueueType type) const;
+
+  
+   //-----------------------------------------------------------------
+   // Returns a specific device queue
+   VkQueue getDeviceQueue(QueueType type, uint32_t index) const;
 
    //--------------------------------------------------------------------------
    //members
@@ -142,9 +171,10 @@ class RenderContextVulkan {
 
    //--------------------------------------------------------------------------
    //members
-   VkInstance                       mVkInstance = nullptr;
-   VkPhysicalDevice                 mPhysicalDevice = nullptr;
-   VkDevice                         mVkDevice = nullptr;
+   VkInstance                       mVkInstance{ nullptr };
+   VkPhysicalDevice                 mPhysicalDevice{ nullptr };
+   VkDevice                         mVkDevice{ nullptr };
+   VkSurfaceKHR                     mVkSurface{ nullptr };
 
    DevicePropertiesVulkan           mDeviceProperties{};
    RenderContextVulkanSettings      mContextSettings{};

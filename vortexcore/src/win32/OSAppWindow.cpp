@@ -2,7 +2,7 @@
 #include "../../include/VortexCore/win32/OSAppWindow.h"
 #include <iostream>
 #include <chrono>
-
+#include <Windows.h>
 
 #define WM_CREATED WM_USER+1
 
@@ -335,6 +335,10 @@ HWND OSAppWindow::handle() {
 //-------------------------------------------------------------------------
 HWND OSAppWindow::winId() {
    return hwnd_;
+}
+
+HINSTANCE OSAppWindow::instance() {
+   return (HINSTANCE)GetWindowLongPtr(hwnd_, GWLP_HINSTANCE);
 }
 
 //-------------------------------------------------------------------------
