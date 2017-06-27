@@ -1,4 +1,5 @@
 #include "..\include\VortexCore\RenderContext.h"
+#include "..\include\VortexCore\AppWindow.h"
 #include "..\include\VortexCore\private\RenderContextVulkan.h"
 #include<string>
 
@@ -29,6 +30,7 @@ void Vt::Gfx::RenderContext::init() {
             //we find a suitable vulkan device
             auto physicalDevice= mVkContext->enumerateAndSelectDevice(Vt::Gfx::DeviceSelectionVulkan::AUTO_SELECT);
             //next we create a logical device
+            VkDevice device{ nullptr };
             if (physicalDevice) {
                QueueCreationInfo queueCreateInfo{};
                queueCreateInfo.mGfxQueueCount = QueueCreationInfo::QueueCount::MAX;
@@ -38,7 +40,10 @@ void Vt::Gfx::RenderContext::init() {
                queueCreateInfo.mTransferQueueCount = QueueCreationInfo::QueueCount::MAX;
                queueCreateInfo.mTransferQueueExclusive = true;
 
-               mVkContext->createDevice(physicalDevice, queueCreateInfo);
+               device= mVkContext->createDevice(physicalDevice, queueCreateInfo);
+            }
+            if (device) {
+               mVkContext->createSurface(device, *mWindow.get());
             }
             //once we have a device we need to create command pools
 

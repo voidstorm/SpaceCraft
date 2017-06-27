@@ -33,6 +33,11 @@ Vt::Gfx::RenderContextVulkan::~RenderContextVulkan() {
          mVkDevice = nullptr;
          SYSTEM_LOG_INFO("Vulkan Device released!");
       }
+      if (mVkSurface) {
+         vkDestroySurfaceKHR(mVkInstance, mVkSurface, nullptr);
+         mVkSurface = nullptr;
+         SYSTEM_LOG_INFO("Surface released!");
+      }
       if (mVkInstance) {
          if (sMsgCallback != VK_NULL_HANDLE) {
             DestroyDebugReportCallback(mVkInstance, sMsgCallback, nullptr);
@@ -446,7 +451,10 @@ VkSurfaceKHR Vt::Gfx::RenderContextVulkan::createSurface(const VkDevice device, 
    surfaceCreateInfo.hwnd = window.winId();
    VkSurfaceKHR surface{ nullptr };
    VK_CHECK_RESULT(vkCreateWin32SurfaceKHR(mVkInstance, &surfaceCreateInfo, nullptr, &surface));
-   return surface;
+   if (!surface) {
+      VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::createSurface: vkCreateWin32SurfaceKHR failed!");
+   }
+   return mVkSurface= surface;
 }
 
 //-----------------------------------------------------------------
