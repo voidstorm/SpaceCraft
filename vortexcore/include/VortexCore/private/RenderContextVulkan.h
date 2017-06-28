@@ -11,6 +11,8 @@
 namespace Vt {
 namespace Gfx {
 
+class SwapchainVulkan;
+
 class RenderContextVkException : public std::runtime_error {
 public:
    explicit RenderContextVkException(const std::string& what_arg) :std::runtime_error(what_arg) {};
@@ -25,6 +27,11 @@ struct RenderContextVulkanSettings {
    };
    ValidationFlags mValidation = ValidationFlags::NONE;
 };
+
+struct SwapchainSettingsVulkan {
+
+};
+
 
 enum class DeviceSelectionVulkan : unsigned {
    AUTO_SELECT,
@@ -82,6 +89,7 @@ enum class QueueType {
 class RenderContextVulkan {
 
    friend class RenderContext;
+   friend class SwapchainVulkan;
    friend class std::unique_ptr<RenderContextVulkan>;
    friend struct std::unique_ptr<RenderContextVulkan>::deleter_type;
 
@@ -95,8 +103,7 @@ class RenderContextVulkan {
 
    //--------------------------------------------------------------------------
    //retrieve vulkan instance
-   VkInstance getVkInstance();
-
+   VkInstance vkInstance();
 
    //--------------------------------------------------------------------------
    //enumerate and select devices
@@ -115,8 +122,8 @@ class RenderContextVulkan {
    VkDevice createDevice(const VkPhysicalDevice device, const QueueCreationInfo & queueCreateInfo);
 
    //-----------------------------------------------------------------
-   // Creates a window surface for presentation
-   VkSurfaceKHR createSurface(const VkDevice device, const Vt::App::AppWindow & window);
+   // Creates a swapchain
+   std::weak_ptr<Vt::Gfx::SwapchainVulkan> createSwapchain(const Vt::App::AppWindow & window, const SwapchainSettingsVulkan & swapchainSettings);
 
    //-----------------------------------------------------------------
    //log some useful adapter info
@@ -129,16 +136,16 @@ class RenderContextVulkan {
 
    //-----------------------------------------------------------------
    // Returns the proper queue family index of the created device
-   uint32_t getQueueFamilyIndex(QueueType type) const;
+   uint32_t queueFamilyIndex(QueueType type) const;
 
    //-----------------------------------------------------------------
    // Returns the queue count
-   uint32_t getQueueCount(QueueType type) const;
+   uint32_t queueCount(QueueType type) const;
 
   
    //-----------------------------------------------------------------
    // Returns a specific device queue
-   VkQueue getDeviceQueue(QueueType type, uint32_t index) const;
+   VkQueue deviceQueue(QueueType type, uint32_t index) const;
 
    //--------------------------------------------------------------------------
    //members
@@ -171,10 +178,10 @@ class RenderContextVulkan {
 
    //--------------------------------------------------------------------------
    //members
+   std::shared_ptr<SwapchainVulkan> mSwapchain;
    VkInstance                       mVkInstance{ nullptr };
    VkPhysicalDevice                 mPhysicalDevice{ nullptr };
    VkDevice                         mVkDevice{ nullptr };
-   VkSurfaceKHR                     mVkSurface{ nullptr };
 
    DevicePropertiesVulkan           mDeviceProperties{};
    RenderContextVulkanSettings      mContextSettings{};

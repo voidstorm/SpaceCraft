@@ -42,14 +42,20 @@ Vt::Game::Game(std::unique_ptr<Vt::Gfx::RenderContext> &&render_context) :
 }
 
 
+//-----------------------------------------------------------------
+//
 Vt::Game::~Game() {
    requestShutdown();
 }
 
+//-----------------------------------------------------------------
+//
 Vt::Gfx::RenderContext& Vt::Game::renderContext() {
    return *mRenderContext.get();
 }
 
+//-----------------------------------------------------------------
+//
 bool Vt::Game::requestShutdown() {
    mRunning = false;
 
@@ -61,20 +67,27 @@ bool Vt::Game::requestShutdown() {
    return !mRunning;
 }
 
+//-----------------------------------------------------------------
 Vt::Scene::SceneManager & Vt::Game::sceneManager() {
    return *mSceneManager.get();
 }
 
+//-----------------------------------------------------------------
+//
 int Vt::Game::shutdown() {
    //shutdown render context
    this->mRenderContext.reset();
    return 0;
 }
 
+//-----------------------------------------------------------------
+//
 void Vt::Game::loop(const std::chrono::high_resolution_clock::duration & delta) {
-
+   mRenderContext->swapBuffers();
 }
 
+//-----------------------------------------------------------------
+//
 std::future<int> Vt::Game::start() {
    return std::async(std::launch::async, [this]()->int {
       Vt::SetThreadMapping(Vt::ThreadMapping.TM_GAME_LOOP);
@@ -93,7 +106,7 @@ std::future<int> Vt::Game::start() {
          mLastTick = now;
          loop(dur = ((now = std::chrono::high_resolution_clock::now()) - mLastTick));
 #ifdef VT_TIMING
-         if (mCounter < 100 || mTiming < 1000) {
+         if (mTiming < 1000) {
             mTiming += (double)std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1, 1000>>>(dur).count();
             mCounter++;
          } else {

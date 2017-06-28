@@ -19,6 +19,7 @@ public:
 
 
 class RenderContextVulkan;
+class SwapchainVulkan;
 
 struct RenderContextLayout {
    int width;
@@ -46,6 +47,7 @@ private:
    void resizeSwapChain(unsigned width, unsigned height);
 
 private:
+   std::weak_ptr<SwapchainVulkan>  mSwapchain;
    std::unique_ptr<RenderContextVulkan> mVkContext;
    std::shared_ptr<Vt::App::AppWindow> mWindow;
    RenderContextLayout mLayout;

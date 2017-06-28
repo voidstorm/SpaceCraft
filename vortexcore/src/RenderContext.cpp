@@ -1,6 +1,8 @@
 #include "..\include\VortexCore\RenderContext.h"
 #include "..\include\VortexCore\AppWindow.h"
 #include "..\include\VortexCore\private\RenderContextVulkan.h"
+#include "..\include\VortexCore\private\SwapchainVulkan.h"
+
 #include<string>
 
 
@@ -43,7 +45,7 @@ void Vt::Gfx::RenderContext::init() {
                device= mVkContext->createDevice(physicalDevice, queueCreateInfo);
             }
             if (device) {
-               mVkContext->createSurface(device, *mWindow.get());
+               createSwapChain();
             }
             //once we have a device we need to create command pools
 
@@ -55,6 +57,10 @@ void Vt::Gfx::RenderContext::init() {
 }
 
 bool Vt::Gfx::RenderContext::swapBuffers() {
+   auto sc(mSwapchain.lock());
+   if (sc) {
+      return sc->swapBuffers();
+   }
    return false;
 }
 
@@ -71,7 +77,14 @@ const Vt::Gfx::RenderContextLayout & Vt::Gfx::RenderContext::layout() const {
 }
 
 bool Vt::Gfx::RenderContext::createSwapChain() {
-   return false;
+   Vt::Gfx::SwapchainSettingsVulkan swapchainSettings{
+
+   };
+
+   mSwapchain = mVkContext->createSwapchain(*mWindow.get(), swapchainSettings);
+
+
+   return (mSwapchain.lock() != nullptr);
 }
 
 bool Vt::Gfx::RenderContext::restoreSwapChain() {

@@ -79,6 +79,7 @@ set(PRIVATE_HEADER_FILES
   include/VortexCore/private/Frustum.h
   include/VortexCore/private/Mesh.h
   include/VortexCore/private/RenderContextVulkan.h
+  include/VortexCore/private/SwapchainVulkan.h
   include/vortexcore/private/VkErrorHelper.h
 )
 
@@ -99,6 +100,7 @@ set(SOURCE_FILES
   src/SceneGraph.cpp
   src/SceneManager.cpp
   src/SceneObject.cpp
+  src/SwapchainVulkan.cpp
   src/TransformCache.cpp
   src/VortexCore.cpp
 )

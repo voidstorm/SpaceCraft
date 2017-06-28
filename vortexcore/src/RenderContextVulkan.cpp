@@ -1,4 +1,6 @@
 #include "..\include\VortexCore\private\RenderContextVulkan.h"
+#include "..\include\VortexCore\private\SwapchainVulkan.h"
+
 #include "..\include\VortexCore\AppWindow.h"
 
 
@@ -14,7 +16,7 @@ VkDebugReportCallbackEXT  Vt::Gfx::RenderContextVulkan::sMsgCallback = VK_NULL_H
 
 Vt::Gfx::RenderContextVulkan::RenderContextVulkan(const RenderContextVulkanSettings & settings) :
    mContextSettings(settings) {
-   mVkInstance = getVkInstance();
+   mVkInstance = vkInstance();
    if (!mVkInstance) {
       VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::RenderContextVulkan: Could not create vulkan instance!");
    }
@@ -28,15 +30,12 @@ Vt::Gfx::RenderContextVulkan::~RenderContextVulkan() {
    mInstanceCount--;
    if (mInstanceCount == 0) {
       //release vulkan instance and device
+      mSwapchain = nullptr;
+
       if (mVkDevice) {
          vkDestroyDevice(mVkDevice, nullptr);
          mVkDevice = nullptr;
          SYSTEM_LOG_INFO("Vulkan Device released!");
-      }
-      if (mVkSurface) {
-         vkDestroySurfaceKHR(mVkInstance, mVkSurface, nullptr);
-         mVkSurface = nullptr;
-         SYSTEM_LOG_INFO("Surface released!");
       }
       if (mVkInstance) {
          if (sMsgCallback != VK_NULL_HANDLE) {
@@ -52,7 +51,7 @@ Vt::Gfx::RenderContextVulkan::~RenderContextVulkan() {
 //--------------------------------------------------------------------------
 //retrieve vulkan instance
 
-VkInstance Vt::Gfx::RenderContextVulkan::getVkInstance() {
+VkInstance Vt::Gfx::RenderContextVulkan::vkInstance() {
    auto createInstance = [this]()->VkInstance {
 
       //application info
@@ -298,9 +297,14 @@ uint32_t Vt::Gfx::RenderContextVulkan::findQueueFamilyIndex(const VkQueueFlagBit
 uint32_t Vt::Gfx::RenderContextVulkan::findPresentQueueFamilyIndex() {
    // Try to find a queue family index that supports compute but not graphics
    int fall_back_device = -1;
+   auto surface = mSwapchain->getSurface();
+   if (!surface) {
+      SYSTEM_LOG_ERROR("RenderContextVulkan::findPresentQueueFamilyIndex: No swapchain surface!");
+      VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::findPresentQueueFamilyIndex: No swapchain surface!");
+   }
    for (uint32_t i = 0; i < static_cast<uint32_t>(mDeviceProperties.mDeviceQueueFamilyProperties.size()); i++) {
       VkBool32 presentSupport = false;
-      vkGetPhysicalDeviceSurfaceSupportKHR(mPhysicalDevice, i, mVkSurface, &presentSupport);
+      vkGetPhysicalDeviceSurfaceSupportKHR(mPhysicalDevice, i, surface, &presentSupport);
       if (presentSupport && ((mDeviceProperties.mDeviceQueueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0)) {
          return i;
       } else if (presentSupport) {
@@ -443,18 +447,11 @@ VkDevice Vt::Gfx::RenderContextVulkan::createDevice(const VkPhysicalDevice devic
 
 //-----------------------------------------------------------------
 //
-VkSurfaceKHR Vt::Gfx::RenderContextVulkan::createSurface(const VkDevice device, const Vt::App::AppWindow & window) {
-
-   VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
-   surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-   surfaceCreateInfo.hinstance = (HINSTANCE)window.instance();
-   surfaceCreateInfo.hwnd = window.winId();
-   VkSurfaceKHR surface{ nullptr };
-   VK_CHECK_RESULT(vkCreateWin32SurfaceKHR(mVkInstance, &surfaceCreateInfo, nullptr, &surface));
-   if (!surface) {
-      VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::createSurface: vkCreateWin32SurfaceKHR failed!");
-   }
-   return mVkSurface= surface;
+std::weak_ptr<Vt::Gfx::SwapchainVulkan> Vt::Gfx::RenderContextVulkan::createSwapchain(const Vt::App::AppWindow & window, const SwapchainSettingsVulkan & swapchainSettings) {
+   mSwapchain = std::unique_ptr<Vt::Gfx::SwapchainVulkan>(new SwapchainVulkan(swapchainSettings, *this));
+   //create window surface
+   mSwapchain->createSurface(mVkDevice, window);
+   return mSwapchain;
 }
 
 //-----------------------------------------------------------------
@@ -570,7 +567,7 @@ void Vt::Gfx::RenderContextVulkan::logAdapterProperties(const VkPhysicalDevicePr
 
 //--------------------------------------------------------------------------
 //
-uint32_t Vt::Gfx::RenderContextVulkan::getQueueFamilyIndex(Vt::Gfx::QueueType type) const {
+uint32_t Vt::Gfx::RenderContextVulkan::queueFamilyIndex(Vt::Gfx::QueueType type) const {
    switch (type) {
       case Vt::Gfx::QueueType::GRAPHICS:
          return mQueueIndices.mGraphics;
@@ -592,7 +589,7 @@ uint32_t Vt::Gfx::RenderContextVulkan::getQueueFamilyIndex(Vt::Gfx::QueueType ty
 
 //--------------------------------------------------------------------------
 //
-uint32_t Vt::Gfx::RenderContextVulkan::getQueueCount(QueueType type) const {
+uint32_t Vt::Gfx::RenderContextVulkan::queueCount(QueueType type) const {
    switch (type) {
       case Vt::Gfx::QueueType::GRAPHICS:
          return (uint32_t)mQueueConfiguration.mGfxQueueCount;
@@ -611,10 +608,10 @@ uint32_t Vt::Gfx::RenderContextVulkan::getQueueCount(QueueType type) const {
 
 //--------------------------------------------------------------------------
 //
-VkQueue Vt::Gfx::RenderContextVulkan::getDeviceQueue(QueueType type, uint32_t index) const {
+VkQueue Vt::Gfx::RenderContextVulkan::deviceQueue(QueueType type, uint32_t index) const {
    VkQueue queue = nullptr;
-   uint32_t family_idx = getQueueFamilyIndex(type);
-   if (index > getQueueCount(type)) {
+   uint32_t family_idx = queueFamilyIndex(type);
+   if (index > queueCount(type)) {
       SYSTEM_LOG_ERROR("RenderContextVulkan::getDeviceQueue: index > queue count!");
       VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::getDeviceQueue: index > queue count!");
    }
