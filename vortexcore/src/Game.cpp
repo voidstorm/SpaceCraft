@@ -55,7 +55,7 @@ Vt::Gfx::RenderContext& Vt::Game::renderContext() {
 }
 
 //-----------------------------------------------------------------
-//
+// can be overwritten, if returns false, window will not close
 bool Vt::Game::requestShutdown() {
    mRunning = false;
 

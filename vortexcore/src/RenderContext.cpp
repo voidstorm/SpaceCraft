@@ -41,11 +41,16 @@ void Vt::Gfx::RenderContext::init() {
                queueCreateInfo.mComputeQueueExclusive = true;
                queueCreateInfo.mTransferQueueCount = QueueCreationInfo::QueueCount::MAX;
                queueCreateInfo.mTransferQueueExclusive = true;
-
+               
+               //first we create a window surface, this is due to the device needing to create a
+               //present queue based on the swapchain
+               //For headless rendering we skip this
+               createWindowSurface();
+               //only then we can create a device
                device= mVkContext->createDevice(physicalDevice, queueCreateInfo);
             }
             if (device) {
-               createSwapChain();
+               //now we can init the swapchain
             }
             //once we have a device we need to create command pools
 
@@ -76,14 +81,11 @@ const Vt::Gfx::RenderContextLayout & Vt::Gfx::RenderContext::layout() const {
    return mLayout;
 }
 
-bool Vt::Gfx::RenderContext::createSwapChain() {
+bool Vt::Gfx::RenderContext::createWindowSurface() {
    Vt::Gfx::SwapchainSettingsVulkan swapchainSettings{
 
    };
-
-   mSwapchain = mVkContext->createSwapchain(*mWindow.get(), swapchainSettings);
-
-
+   mSwapchain = mVkContext->createWindowSurfaceAndSwapchain(*mWindow.get(), swapchainSettings);
    return (mSwapchain.lock() != nullptr);
 }
 

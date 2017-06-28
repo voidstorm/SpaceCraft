@@ -27,7 +27,7 @@ Vt::Gfx::SwapchainVulkan::~SwapchainVulkan() {
 
 //-----------------------------------------------------------------
 //
-VkSurfaceKHR Vt::Gfx::SwapchainVulkan::createSurface(const VkDevice device, const Vt::App::AppWindow & window) {
+VkSurfaceKHR Vt::Gfx::SwapchainVulkan::createSurface(const Vt::App::AppWindow & window) {
 
    VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
    surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;

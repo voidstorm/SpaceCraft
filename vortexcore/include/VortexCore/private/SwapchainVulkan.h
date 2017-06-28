@@ -40,7 +40,7 @@ class SwapchainVulkan {
 
    //-----------------------------------------------------------------
    // Creates a window surface for presentation
-   VkSurfaceKHR createSurface(const VkDevice device, const Vt::App::AppWindow & window);
+   VkSurfaceKHR createSurface(const Vt::App::AppWindow & window);
 
    //-----------------------------------------------------------------
    // Returns the window surface

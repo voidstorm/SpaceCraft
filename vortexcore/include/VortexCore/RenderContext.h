@@ -42,7 +42,7 @@ public:
    const RenderContextLayout& layout() const;
 
 private:
-   bool createSwapChain();
+   bool createWindowSurface();
    bool restoreSwapChain();
    void resizeSwapChain(unsigned width, unsigned height);
 

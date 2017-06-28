@@ -70,6 +70,7 @@ struct QueueCreationInfo {
    bool mGfxQueueExclusive = false;
    bool mComputeQueueExclusive = true;
    bool mTransferQueueExclusive = true;
+   bool mPresentQueueExclusive = false;
 };
 
 struct QueueFamilyIndex {
@@ -123,7 +124,7 @@ class RenderContextVulkan {
 
    //-----------------------------------------------------------------
    // Creates a swapchain
-   std::weak_ptr<Vt::Gfx::SwapchainVulkan> createSwapchain(const Vt::App::AppWindow & window, const SwapchainSettingsVulkan & swapchainSettings);
+   std::weak_ptr<Vt::Gfx::SwapchainVulkan> createWindowSurfaceAndSwapchain(const Vt::App::AppWindow & window, const SwapchainSettingsVulkan & swapchainSettings);
 
    //-----------------------------------------------------------------
    //log some useful adapter info

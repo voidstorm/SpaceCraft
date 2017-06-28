@@ -396,6 +396,26 @@ VkDevice Vt::Gfx::RenderContextVulkan::createDevice(const VkPhysicalDevice devic
       SYSTEM_LOG_WARN("RenderContextVulkan::createDevice: Exclusive transfer queue requested, but not available, using gfx queue instead!");
    }
 
+   //add present queue
+   bool separatePresentQueue = false;
+   for (auto & q : queueCreateInfos) {
+      if (q.queueFamilyIndex == mQueueIndices.mPresent) {
+         separatePresentQueue = false;
+         break;
+      } else {
+         separatePresentQueue = true;
+      }
+   }
+   if (separatePresentQueue) {
+      VkDeviceQueueCreateInfo queueInfo{};
+      queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+      queueInfo.queueFamilyIndex = mQueueIndices.mPresent;
+      queueInfo.queueCount = 1;
+      queueInfo.pQueuePriorities = defaultQueuePriorityTransfer;
+      queueCreateInfos.push_back(queueInfo);
+      mQueueConfiguration.mPresentQueueExclusive = true;
+   }
+
    //push all extensions
    std::vector<const char*> deviceExtensions;
    for (auto & ext : mDeviceProperties.mExtensions) {
@@ -441,16 +461,20 @@ VkDevice Vt::Gfx::RenderContextVulkan::createDevice(const VkPhysicalDevice devic
    SYSTEM_LOG_INFO("Transfer Queue Idx: %d", mQueueIndices.mTransfer);
    SYSTEM_LOG_INFO("Transfer Queue Count: %d", mQueueConfiguration.mTransferQueueCount);
    SYSTEM_LOG_INFO("Transfer Queue Exclusive: %s", mQueueConfiguration.mTransferQueueExclusive ? "YES" : "NO");
+   SYSTEM_LOG_INFO("Present Queue Idx: %d", mQueueIndices.mPresent);
+   SYSTEM_LOG_INFO("Present Queue Exclusive: %s", mQueueConfiguration.mPresentQueueExclusive ? "YES" : "NO");
 
    return mVkDevice = logicalDevice;
 }
 
 //-----------------------------------------------------------------
 //
-std::weak_ptr<Vt::Gfx::SwapchainVulkan> Vt::Gfx::RenderContextVulkan::createSwapchain(const Vt::App::AppWindow & window, const SwapchainSettingsVulkan & swapchainSettings) {
+std::weak_ptr<Vt::Gfx::SwapchainVulkan> Vt::Gfx::RenderContextVulkan::createWindowSurfaceAndSwapchain(const Vt::App::AppWindow & window, const SwapchainSettingsVulkan & swapchainSettings) {
    mSwapchain = std::unique_ptr<Vt::Gfx::SwapchainVulkan>(new SwapchainVulkan(swapchainSettings, *this));
    //create window surface
-   mSwapchain->createSurface(mVkDevice, window);
+   mSwapchain->createSurface(window);
+   //find and set a proper present queue
+   mQueueIndices.mPresent = findPresentQueueFamilyIndex();
    return mSwapchain;
 }
 
