@@ -148,6 +148,18 @@ class RenderContextVulkan {
    // Returns a specific device queue
    VkQueue deviceQueue(QueueType type, uint32_t index) const;
 
+   //-----------------------------------------------------------------
+   // Returns if a device extension is supported
+   bool checkInstanceExtension(const std::string &extension);
+
+   //-----------------------------------------------------------------
+   // Returns if a device extension is supported
+   bool checkDeviceExtension(const std::string &extension);
+
+   //-----------------------------------------------------------------
+   // Returns if a device feature is supported
+   VkPhysicalDeviceFeatures deviceFeatures() const;
+
    //--------------------------------------------------------------------------
    //members
    static VKAPI_ATTR VkBool32 VKAPI_CALL validationLayerCallback(

@@ -18,11 +18,7 @@ Vt::Gfx::SwapchainVulkan::SwapchainVulkan(const SwapchainSettingsVulkan & settin
 // D'tor
 
 Vt::Gfx::SwapchainVulkan::~SwapchainVulkan() {
-   if (mVkSurface) {
-      vkDestroySurfaceKHR(mContext.vkInstance(), mVkSurface, nullptr);
-      mVkSurface = nullptr;
-      SYSTEM_LOG_INFO("Surface released!");
-   }
+   releaseSurface();
 }
 
 //-----------------------------------------------------------------
@@ -41,11 +37,45 @@ VkSurfaceKHR Vt::Gfx::SwapchainVulkan::createSurface(const Vt::App::AppWindow & 
    return mVkSurface= surface;
 }
 
+
+//-----------------------------------------------------------------
+//
 VkSurfaceKHR Vt::Gfx::SwapchainVulkan::getSurface() const {
    return mVkSurface;
 }
 
+//-----------------------------------------------------------------
+//
+void Vt::Gfx::SwapchainVulkan::releaseSurface() {
+   if (mVkSurface) {
+      vkDestroySurfaceKHR(mContext.vkInstance(), mVkSurface, nullptr);
+      mVkSurface = nullptr;
+      SYSTEM_LOG_INFO("Surface released!");
+   }
+}
+
+//-----------------------------------------------------------------
+//
+void Vt::Gfx::SwapchainVulkan::releaseSwapchain() {
+
+}
+
+//-----------------------------------------------------------------
+//
+bool Vt::Gfx::SwapchainVulkan::restore() {
+   if (!mContext.checkDeviceExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME)) {
+      VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::restore: VK_KHR_SWAPCHAIN_EXTENSION not supported!");
+      return false;
+   }
+   releaseSwapchain();
+   releaseSurface();
+
+}
+
+//-----------------------------------------------------------------
+//
 bool Vt::Gfx::SwapchainVulkan::swapBuffers() {
+
    return false;
 }
 

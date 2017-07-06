@@ -51,6 +51,8 @@ void Vt::Gfx::RenderContext::init() {
             }
             if (device) {
                //now we can init the swapchain
+               auto sc = mSwapchain.lock();
+               sc->restore();
             }
             //once we have a device we need to create command pools
 

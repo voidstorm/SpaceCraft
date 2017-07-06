@@ -644,6 +644,27 @@ VkQueue Vt::Gfx::RenderContextVulkan::deviceQueue(QueueType type, uint32_t index
 }
 
 //--------------------------------------------------------------------------
+bool Vt::Gfx::RenderContextVulkan::checkInstanceExtension(const std::string & extension) {
+   return false;
+}
+
+//--------------------------------------------------------------------------
+bool Vt::Gfx::RenderContextVulkan::checkDeviceExtension(const std::string & extension) {
+   for (auto & ext : mDeviceProperties.mExtensions) {
+      if(ext == extension){ 
+         return true;
+      }
+   }
+   return false;
+}
+
+//--------------------------------------------------------------------------
+VkPhysicalDeviceFeatures Vt::Gfx::RenderContextVulkan::deviceFeatures() const {
+   return mDeviceProperties.mDeviceFeatures;
+}
+
+
+//--------------------------------------------------------------------------
 //members
 
 VKAPI_ATTR VkBool32 VKAPI_CALL Vt::Gfx::RenderContextVulkan::validationLayerCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char * layerPrefix, const char * msg) {

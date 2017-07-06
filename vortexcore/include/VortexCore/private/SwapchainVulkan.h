@@ -22,11 +22,10 @@ public:
 
 
 class SwapchainVulkan {
-   friend class RenderContext;
    friend class RenderContextVulkan;
    friend class std::unique_ptr<SwapchainVulkan>;
    friend struct std::unique_ptr<SwapchainVulkan>::deleter_type;
-   
+
    friend class std::shared_ptr<SwapchainVulkan>;
 
    //--------------------------------------------------------------------------
@@ -46,13 +45,23 @@ class SwapchainVulkan {
    // Returns the window surface
    VkSurfaceKHR getSurface() const;
 
+   void releaseSurface();
+
+   void releaseSwapchain();
+
+public:
+
+   //-----------------------------------------------------------------
+   // Restores the swapchain
+   bool restore();
+
    //-----------------------------------------------------------------
    // swap buffers
    bool swapBuffers();
-   
+
 private:
    VkSurfaceKHR                     mVkSurface{ nullptr };
-   SwapchainSettingsVulkan          mSettings;
+   SwapchainSettingsVulkan          mSettings{};
    RenderContextVulkan              &mContext;
 };
 
