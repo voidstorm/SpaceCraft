@@ -1,4 +1,9 @@
 #pragma once
+#include <stdexcept>
+
+#define LOGGING_ON
+
+
 #ifdef _DEBUG
 #include <iostream>
 #ifndef V
@@ -8,12 +13,14 @@
 #define V(x) 
 #endif
 
-#define LOGGING_ON
  
 
 
 #ifdef _WIN32
 #pragma warning( disable : 4251 )
+
+//--------------------------------------DEBUG SETTINGS---------------------------------
+
 #ifdef _DEBUG
 //MEMCHECK MACRO
 #define _CRTDBG_MAP_ALLOC
@@ -23,10 +30,13 @@
 #define new DEBUG_NEW
 #define VT_DO_LEAK_CHECK _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF)
 
+
 //VERBOSE
 #include <iostream>
 #include <string>
 //#define V(x) std::cout << x << " in file: "<< __FILE__ " at line: " << __LINE__ << std::endl
+
+
 
 #define VT_EXCEPT(x, msg) throw x(std::string("Exception in file: ") + std::string(__FILE__) + std::string(" in line: ") + std::to_string(__LINE__) + std::string(" -> ") + std::string(msg) + std::string("\n"))
 #define VT_EXCEPT_RT(x, msg, e) throw x(std::string("Exception in file: ") + std::string(__FILE__) + std::string(" in line: ") + std::to_string(__LINE__) + std::string(" -> ") + std::string(msg) + std::string("\n") + e.what())
@@ -50,11 +60,33 @@
 #define SYSTEM_LOG_ERROR(x, ...)
 #endif
 
-
 //D3D DEBUG MACROS
 #define D3D_DEBUG
 
 #else
+//--------------------------------------RELEASE SETTINGS---------------------------------
+#define VT_EXCEPT(x, msg) throw x(std::string("Exception in file: ") + std::string(__FILE__) + std::string(" in line: ") + std::to_string(__LINE__) + std::string(" -> ") + std::string(msg) + std::string("\n"))
+#define VT_EXCEPT_RT(x, msg, e) throw x(std::string("Exception in file: ") + std::string(__FILE__) + std::string(" in line: ") + std::to_string(__LINE__) + std::string(" -> ") + std::string(msg) + std::string("\n") + e.what())
+
+
+#define VK_CHECK_RESULT(x) \
+{ \
+   auto result = (x); \
+      if (result != VkResult::VK_SUCCESS) { \
+         SystemLogger::get().error("Failed to create instance with error: %s", VkErrorHelper::vkResultToStr(result).c_str()); \
+      } \
+} 
+
+#ifdef LOGGING_ON
+#define SYSTEM_LOG_INFO(x, ...) SystemLogger::get().info(x, ##__VA_ARGS__)
+#define SYSTEM_LOG_WARN(x, ...) SystemLogger::get().warn(x, ##__VA_ARGS__)
+#define SYSTEM_LOG_ERROR(x, ...) SystemLogger::get().error(x, ##__VA_ARGS__)
+#else 
+#define SYSTEM_LOG_INFO(x, ...)
+#define SYSTEM_LOG_WARN(x, ...)
+#define SYSTEM_LOG_ERROR(x, ...)
+#endif
+
 #define VT_MEM_CHECK {}
 #define V(x) 
 #define VT_DO_LEAK_CHECK {}
