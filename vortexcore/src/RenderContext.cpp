@@ -51,8 +51,9 @@ void Vt::Gfx::RenderContext::init() {
             }
             if (device) {
                //now we can init the swapchain
-               auto sc = mSwapchain.lock();
-               sc->restore();
+               if (!restoreSwapChain()) {
+                  VT_EXCEPT(RenderContextException, "RenderContext::init: Could not restore swapchain!");
+               }
             }
             //once we have a device we need to create command pools
 
@@ -92,7 +93,8 @@ bool Vt::Gfx::RenderContext::createWindowSurface() {
 }
 
 bool Vt::Gfx::RenderContext::restoreSwapChain() {
-   return false;
+   auto sc = mSwapchain.lock(); 
+   return sc->restore();;
 }
 
 void Vt::Gfx::RenderContext::resizeSwapChain(unsigned width, unsigned height) {

@@ -134,6 +134,16 @@ VkInstance Vt::Gfx::RenderContextVulkan::vkInstance() {
 
 //-----------------------------------------------------------------
 // Finds the proper queue family index
+VkPhysicalDevice Vt::Gfx::RenderContextVulkan::vkPhysicalDevice() {
+   return mPhysicalDevice;
+}
+
+//-----------------------------------------------------------------
+// Finds the proper queue family index
+VkDevice Vt::Gfx::RenderContextVulkan::vkDevice() {
+   return mVkDevice;
+}
+
 
 
 //--------------------------------------------------------------------------

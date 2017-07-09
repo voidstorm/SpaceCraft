@@ -29,7 +29,8 @@ struct RenderContextVulkanSettings {
 };
 
 struct SwapchainSettingsVulkan {
-
+   VkSurfaceFormatKHR mSurfaceFormat{ VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
+   VkPresentModeKHR mPresentMode{ VK_PRESENT_MODE_IMMEDIATE_KHR }; //no v-sync
 };
 
 
@@ -105,6 +106,14 @@ class RenderContextVulkan {
    //--------------------------------------------------------------------------
    //retrieve vulkan instance
    VkInstance vkInstance();
+
+   //--------------------------------------------------------------------------
+   //retrieve physical vulkan device
+   VkPhysicalDevice vkPhysicalDevice();
+
+   //--------------------------------------------------------------------------
+   //retrieve logical vulkan device
+   VkDevice vkDevice();
 
    //--------------------------------------------------------------------------
    //enumerate and select devices

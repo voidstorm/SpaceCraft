@@ -14,6 +14,12 @@ namespace Gfx {
 class RenderContextVulkan;
 struct SwapchainSettingsVulkan;
 
+struct SwapchainPropertiesVulkan {
+   VkSurfaceCapabilitiesKHR mCapabilities;
+   std::vector<VkSurfaceFormatKHR> mFormats;
+   std::vector<VkPresentModeKHR> mPresentModes;
+};
+
 class SwapchainVkException : public std::runtime_error {
 public:
    explicit SwapchainVkException(const std::string& what_arg) :std::runtime_error(what_arg) {};
@@ -45,11 +51,36 @@ class SwapchainVulkan {
    // Returns the window surface
    VkSurfaceKHR getSurface() const;
 
+   //-----------------------------------------------------------------
+   // Releases the window surface
    void releaseSurface();
 
+   //-----------------------------------------------------------------
+   // Releases the swapchain
    void releaseSwapchain();
 
+
+   //-----------------------------------------------------------------
+   // Chooses the swapchain format based on settings
+   VkSurfaceFormatKHR  chooseSwapchainFormat();
+
+   //-----------------------------------------------------------------
+   // Chooses present mode based on settings
+   VkPresentModeKHR choosePresentMode();
+
 public:
+
+   //-----------------------------------------------------------------
+   // Queries all swapchain properties
+   SwapchainPropertiesVulkan const & querySwapchainProperties();
+
+   //-----------------------------------------------------------------
+   // Checks if the device supports the specified formats and modes
+   // If none is specified it returns true if at least one format and mode
+   // is available
+   // Note, that right now checking of device formats is not implemented
+   bool isDeviceSuitable(const std::vector<VkSurfaceFormatKHR> formats = std::vector<VkSurfaceFormatKHR>{}, 
+                         const std::vector<VkPresentModeKHR> presentModes = std::vector<VkPresentModeKHR>{});
 
    //-----------------------------------------------------------------
    // Restores the swapchain
@@ -59,10 +90,14 @@ public:
    // swap buffers
    bool swapBuffers();
 
+   //-----------------------------------------------------------------
+   SwapchainSettingsVulkan settings();
+
 private:
    VkSurfaceKHR                     mVkSurface{ nullptr };
    SwapchainSettingsVulkan          mSettings{};
    RenderContextVulkan              &mContext;
+   SwapchainPropertiesVulkan        mProperties{};
 };
 
 }
