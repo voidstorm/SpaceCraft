@@ -31,6 +31,7 @@ struct RenderContextVulkanSettings {
 struct SwapchainSettingsVulkan {
    VkSurfaceFormatKHR mSurfaceFormat{ VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
    VkPresentModeKHR mPresentMode{ VK_PRESENT_MODE_IMMEDIATE_KHR }; //no v-sync
+   VkExtent2D mSize;
 };
 
 
