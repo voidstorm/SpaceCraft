@@ -641,6 +641,11 @@ uint32_t Vt::Gfx::RenderContextVulkan::queueCount(QueueType type) const {
 }
 
 //--------------------------------------------------------------------------
+Vt::Gfx::QueueCreationInfo const & Vt::Gfx::RenderContextVulkan::queueConfiguration() const {
+   return mQueueConfiguration;
+}
+
+//--------------------------------------------------------------------------
 //
 VkQueue Vt::Gfx::RenderContextVulkan::deviceQueue(QueueType type, uint32_t index) const {
    VkQueue queue = nullptr;

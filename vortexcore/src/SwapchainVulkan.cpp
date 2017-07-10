@@ -4,14 +4,19 @@
 #include <thread>
 #include <chrono>
 #include <algorithm>
+#include <limits>
 
+#ifdef max 
+#undef max
+#undef min
+#endif
 
 //--------------------------------------------------------------------------
 // Ctor, creates a vk instance
 
 Vt::Gfx::SwapchainVulkan::SwapchainVulkan(const SwapchainSettingsVulkan & settings, RenderContextVulkan &context) :
    mSettings(settings),
-   mContext(context){
+   mContext(context) {
 
 }
 
@@ -19,6 +24,7 @@ Vt::Gfx::SwapchainVulkan::SwapchainVulkan(const SwapchainSettingsVulkan & settin
 // D'tor
 
 Vt::Gfx::SwapchainVulkan::~SwapchainVulkan() {
+   releaseSwapchain();
    releaseSurface();
 }
 
@@ -35,7 +41,7 @@ VkSurfaceKHR Vt::Gfx::SwapchainVulkan::createSurface(const Vt::App::AppWindow & 
    if (!surface) {
       VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::createSurface: vkCreateWin32SurfaceKHR failed!");
    }
-   return mVkSurface= surface;
+   return mVkSurface = surface;
 }
 
 
@@ -58,7 +64,11 @@ void Vt::Gfx::SwapchainVulkan::releaseSurface() {
 //-----------------------------------------------------------------
 //
 void Vt::Gfx::SwapchainVulkan::releaseSwapchain() {
-
+   if (mVkSwapchain) {
+      vkDestroySwapchainKHR(mContext.vkDevice(), mVkSwapchain, nullptr);
+      mVkSwapchain = nullptr;
+      SYSTEM_LOG_INFO("Swapchain released!");
+   }
 }
 
 //-----------------------------------------------------------------
@@ -108,6 +118,89 @@ VkPresentModeKHR Vt::Gfx::SwapchainVulkan::choosePresentMode() {
       }
    }
    return bestMode;
+}
+
+//-----------------------------------------------------------------
+// size of swap surface
+VkExtent2D Vt::Gfx::SwapchainVulkan::chooseSwapExtent() {
+   if (mProperties.mCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+      return mProperties.mCapabilities.currentExtent;
+   } else {
+      VkExtent2D actualExtent = { mSettings.mSize };
+
+      actualExtent.width = std::max(mProperties.mCapabilities.minImageExtent.width, std::min(mProperties.mCapabilities.maxImageExtent.width, actualExtent.width));
+      actualExtent.height = std::max(mProperties.mCapabilities.minImageExtent.height, std::min(mProperties.mCapabilities.maxImageExtent.height, actualExtent.height));
+
+      return actualExtent;
+   }
+}
+
+//-----------------------------------------------------------------
+// create the swapchain
+VkSwapchainKHR Vt::Gfx::SwapchainVulkan::createSwapchain() {
+   VkSwapchainKHR swapchain = nullptr;
+   //first we determine the lenght of the swapchain queue
+   uint32_t imageCount = mProperties.mCapabilities.minImageCount + 1;
+   if (mProperties.mCapabilities.maxImageCount > 0 && imageCount > mProperties.mCapabilities.maxImageCount) {
+      imageCount = mProperties.mCapabilities.maxImageCount;
+   }
+
+   VkSwapchainCreateInfoKHR createInfo = {};
+   createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+   createInfo.surface = mVkSurface;
+
+   createInfo.minImageCount = imageCount;
+   createInfo.imageFormat = mSettings.mSurfaceFormat.format;
+   createInfo.imageColorSpace = mSettings.mSurfaceFormat.colorSpace;
+   createInfo.imageExtent = mSettings.mSize;
+   createInfo.imageArrayLayers = 1; //set to > 1 if stereoscopic
+   createInfo.imageUsage = mSettings.mFbTransferTarget == false ? VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+
+   uint32_t queueFamilyIndices[] = { mContext.queueFamilyIndex(Vt::Gfx::QueueType::GRAPHICS), mContext.queueFamilyIndex(Vt::Gfx::QueueType::PRESENT) };
+
+   if (mContext.queueConfiguration().mPresentQueueExclusive) {
+      createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+      createInfo.queueFamilyIndexCount = 2;
+      createInfo.pQueueFamilyIndices = queueFamilyIndices;
+   } else {
+      createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+      createInfo.queueFamilyIndexCount = 0; // Optional
+      createInfo.pQueueFamilyIndices = nullptr; // Optional
+   }
+   //e.g rotate image
+   createInfo.preTransform = mSettings.mTransform == VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR ? mProperties.mCapabilities.currentTransform : mSettings.mTransform;
+   createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+   createInfo.presentMode = mSettings.mPresentMode;
+   createInfo.clipped = VK_TRUE;
+   createInfo.oldSwapchain = mVkSwapchain;
+
+   VK_CHECK_RESULT(vkCreateSwapchainKHR(mContext.vkDevice(), &createInfo, nullptr, &swapchain));
+
+   return swapchain;
+}
+
+//-----------------------------------------------------------------
+// query swapchain properties
+void Vt::Gfx::SwapchainVulkan::logSwapchainProperties() {
+   SYSTEM_LOG_INFO("--------------------------------------------");
+   SYSTEM_LOG_INFO("Swapchain Properties");
+   SYSTEM_LOG_INFO("--------------------------------------------");
+   SYSTEM_LOG_INFO("minImageCount: %d", mProperties.mCapabilities.minImageCount);
+   SYSTEM_LOG_INFO("maxImageCount: %d", mProperties.mCapabilities.maxImageCount);
+   SYSTEM_LOG_INFO("currentExtent: %dx%d", mProperties.mCapabilities.currentExtent.width, mProperties.mCapabilities.currentExtent.height);
+   SYSTEM_LOG_INFO("minImageExtent: %dx%d", mProperties.mCapabilities.minImageExtent.width, mProperties.mCapabilities.minImageExtent.height);
+   SYSTEM_LOG_INFO("maxImageExtent: %dx%d", mProperties.mCapabilities.maxImageExtent.width, mProperties.mCapabilities.maxImageExtent.height);
+   SYSTEM_LOG_INFO("maxImageArrayLayers: %d", mProperties.mCapabilities.maxImageArrayLayers);
+   SYSTEM_LOG_INFO("--------------------------------------------");
+   SYSTEM_LOG_INFO("Swapchain Created with:");
+   SYSTEM_LOG_INFO("--------------------------------------------");
+   SYSTEM_LOG_INFO("Width: %d", mSettings.mSize.width);
+   SYSTEM_LOG_INFO("Height: %d", mSettings.mSize.height);
+   SYSTEM_LOG_INFO("Surface format: %x", (uint32_t)mSettings.mSurfaceFormat.format);
+   SYSTEM_LOG_INFO("Color space format: %x", (uint32_t)mSettings.mSurfaceFormat.colorSpace);
+   SYSTEM_LOG_INFO("Present mode: %x", (uint32_t)mSettings.mPresentMode);
+   SYSTEM_LOG_INFO("Transfer target: %s", mSettings.mFbTransferTarget == true ? "YES" : "NO");
+   SYSTEM_LOG_INFO("Transform flags: %x", (uint32_t)mSettings.mTransform);
 }
 
 //-----------------------------------------------------------------
@@ -162,11 +255,19 @@ bool Vt::Gfx::SwapchainVulkan::restore() {
    }
 
    //choose swapchain surface format
-   mSettings.mSurfaceFormat= chooseSwapchainFormat();
+   mSettings.mSurfaceFormat = chooseSwapchainFormat();
 
    //choose presentation mode
    mSettings.mPresentMode = choosePresentMode();
 
+   //swap extent
+   mSettings.mSize = chooseSwapExtent();
+
+   //now we can create our swapchain
+   mVkSwapchain = createSwapchain();
+
+   //write some logs
+   logSwapchainProperties();
    return true;
 }
 

@@ -32,6 +32,8 @@ struct SwapchainSettingsVulkan {
    VkSurfaceFormatKHR mSurfaceFormat{ VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
    VkPresentModeKHR mPresentMode{ VK_PRESENT_MODE_IMMEDIATE_KHR }; //no v-sync
    VkExtent2D mSize;
+   bool mFbTransferTarget{ false };
+   VkSurfaceTransformFlagBitsKHR mTransform{ VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR };
 };
 
 
@@ -153,7 +155,10 @@ class RenderContextVulkan {
    // Returns the queue count
    uint32_t queueCount(QueueType type) const;
 
-  
+   //-----------------------------------------------------------------
+   //Returns the queue configuration
+   QueueCreationInfo const & queueConfiguration() const;
+
    //-----------------------------------------------------------------
    // Returns a specific device queue
    VkQueue deviceQueue(QueueType type, uint32_t index) const;

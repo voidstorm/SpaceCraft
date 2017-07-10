@@ -68,6 +68,18 @@ class SwapchainVulkan {
    // Chooses present mode based on settings
    VkPresentModeKHR choosePresentMode();
 
+   //-----------------------------------------------------------------
+   // Swap extent
+   VkExtent2D chooseSwapExtent();
+
+   //-----------------------------------------------------------------
+   // Swap extent
+   VkSwapchainKHR createSwapchain();
+
+   //-----------------------------------------------------------------
+   // Do some logging
+   void logSwapchainProperties();
+
 public:
 
    //-----------------------------------------------------------------
@@ -95,6 +107,7 @@ public:
 
 private:
    VkSurfaceKHR                     mVkSurface{ nullptr };
+   VkSwapchainKHR                   mVkSwapchain{ nullptr };
    SwapchainSettingsVulkan          mSettings{};
    RenderContextVulkan              &mContext;
    SwapchainPropertiesVulkan        mProperties{};
