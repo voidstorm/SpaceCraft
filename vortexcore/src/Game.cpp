@@ -93,6 +93,7 @@ std::future<int> Vt::Game::start() {
       Vt::SetThreadMapping(Vt::ThreadMapping.TM_GAME_LOOP);
       while (!mRunning) {
          //wait for window to show
+          std::this_thread::yield();
       }
       //init render context
 

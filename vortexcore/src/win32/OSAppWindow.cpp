@@ -68,8 +68,10 @@ LRESULT OSAppWindow::processMessage(HWND hWnd, UINT message, WPARAM wParam, LPAR
             onTimer();
          break;
       case WM_PAINT:
-         if (!close_)
+          if (!close_)
+            BeginPaint(hWnd, NULL);
             onPaint();
+            EndPaint(hWnd, NULL);
          return TRUE;
          break;
       case WM_ERASEBKGND:
@@ -301,10 +303,14 @@ LRESULT OSAppWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 //-------------------------------------------------------------------------
 int OSAppWindow::run() {
    MSG msg = { 0 };
-   while (refCount_ && GetMessage(&msg, NULL, 0, 0)) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-      WaitMessage();
+   while (refCount_) {
+      if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) == 0){
+          WaitMessage();
+      }
+      else{
+          TranslateMessage(&msg);
+          DispatchMessage(&msg);
+      }
    }
    return 0;
 }
