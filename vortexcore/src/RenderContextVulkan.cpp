@@ -171,7 +171,7 @@ VkPhysicalDevice Vt::Gfx::RenderContextVulkan::enumerateAndSelectDevice(const De
       vkGetPhysicalDeviceProperties(device, &deviceProperties);
       SYSTEM_LOG_INFO("--------------------------------------------");
       SYSTEM_LOG_INFO("Device Name: %s", deviceProperties.deviceName);
-      SYSTEM_LOG_INFO("Device Id: %x", deviceProperties.deviceID);
+      SYSTEM_LOG_INFO("Device Id: 0x%x", deviceProperties.deviceID);
       SYSTEM_LOG_INFO("Device Type: %s", VkErrorHelper::physicalDeviceTypeToStr(deviceProperties.deviceType).c_str());
       SYSTEM_LOG_INFO("Device API: %d.%d.%d", (deviceProperties.apiVersion >> 22), ((deviceProperties.apiVersion >> 12) & 0x3ff), (deviceProperties.apiVersion & 0xfff));
    }
@@ -261,7 +261,7 @@ VkPhysicalDevice Vt::Gfx::RenderContextVulkan::enumerateAndSelectDevice(const De
          }
       }
    }
-   SYSTEM_LOG_INFO("Selected Adapter: %s Id:  %x", mDeviceProperties.mDeviceProperties.deviceName, mDeviceProperties.mDeviceProperties.deviceID);
+   SYSTEM_LOG_INFO("Selected Adapter: %s Id:  0x%x", mDeviceProperties.mDeviceProperties.deviceName, mDeviceProperties.mDeviceProperties.deviceID);
    if (!mDeviceProperties.mQueueFamilyCount) {
       VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::enumerateAndSelectDevice: Could find a vulkan capable device!");
    }
