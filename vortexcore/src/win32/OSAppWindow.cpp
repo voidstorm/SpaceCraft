@@ -304,13 +304,10 @@ LRESULT OSAppWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 int OSAppWindow::run() {
    MSG msg = { 0 };
    while (refCount_) {
-      if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) == 0){
-          WaitMessage();
-      }
-      else{
-          TranslateMessage(&msg);
-          DispatchMessage(&msg);
-      }
+       if (GetMessage(&msg, NULL, 0, 0)){
+           TranslateMessage(&msg);
+           DispatchMessage(&msg);
+       }
    }
    return 0;
 }
