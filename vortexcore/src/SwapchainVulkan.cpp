@@ -24,6 +24,7 @@ Vt::Gfx::SwapchainVulkan::SwapchainVulkan(const SwapchainSettingsVulkan & settin
 // D'tor
 
 Vt::Gfx::SwapchainVulkan::~SwapchainVulkan() {
+   releaseImageViews();
    releaseSwapchain();
    releaseSurface();
 }
@@ -174,9 +175,53 @@ VkSwapchainKHR Vt::Gfx::SwapchainVulkan::createSwapchain() {
    createInfo.clipped = VK_TRUE;
    createInfo.oldSwapchain = mVkSwapchain;
 
+   // Set additional usage flag for blitting from the swapchain images if supported
+   VkFormatProperties formatProps;
+   vkGetPhysicalDeviceFormatProperties(mContext.vkPhysicalDevice(), createInfo.imageFormat, &formatProps);
+   if ((formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_BLIT_DST_BIT) && mSettings.mSupportBlit) {
+      createInfo.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+   }
+
    VK_CHECK_RESULT(vkCreateSwapchainKHR(mContext.vkDevice(), &createInfo, nullptr, &swapchain));
+   VK_CHECK_RESULT(vkGetSwapchainImagesKHR(mContext.vkDevice(), swapchain, &imageCount, nullptr));
+   mSwapChainImages.resize(imageCount);
+   VK_CHECK_RESULT(vkGetSwapchainImagesKHR(mContext.vkDevice(), swapchain, &imageCount, mSwapChainImages.data()));
 
    return swapchain;
+}
+
+//-----------------------------------------------------------------
+// query swapchain properties
+bool Vt::Gfx::SwapchainVulkan::createImageViews() {
+   mSwapChainImageViews.resize(mSwapChainImages.size());
+   auto view = 0;
+   for (const auto & img : mSwapChainImages) {
+      VkImageViewCreateInfo createInfo = {};
+      createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+      createInfo.image = img;
+      createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+      createInfo.format = mSettings.mSurfaceFormat.format;
+      createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+      createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+      createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+      createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+      createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      createInfo.subresourceRange.baseMipLevel = 0;
+      createInfo.subresourceRange.levelCount = 1;
+      createInfo.subresourceRange.baseArrayLayer = 0;
+      createInfo.subresourceRange.layerCount = 1;
+
+      VK_CHECK_RESULT(vkCreateImageView(mContext.vkDevice(), &createInfo, nullptr, &mSwapChainImageViews[view++]));
+   }
+   return true;
+}
+
+//-----------------------------------------------------------------
+// query swapchain properties
+void Vt::Gfx::SwapchainVulkan::releaseImageViews() {
+   for (auto & img : mSwapChainImageViews) {
+      vkDestroyImageView(mContext.vkDevice(), img, nullptr);
+   }
 }
 
 //-----------------------------------------------------------------
@@ -194,13 +239,14 @@ void Vt::Gfx::SwapchainVulkan::logSwapchainProperties() {
    SYSTEM_LOG_INFO("--------------------------------------------");
    SYSTEM_LOG_INFO("Swapchain Created with:");
    SYSTEM_LOG_INFO("--------------------------------------------");
+   SYSTEM_LOG_INFO("Swapchain image count: %d", mSwapChainImages.size());
    SYSTEM_LOG_INFO("Width: %d", mSettings.mSize.width);
    SYSTEM_LOG_INFO("Height: %d", mSettings.mSize.height);
-   SYSTEM_LOG_INFO("Surface format: %x", (uint32_t)mSettings.mSurfaceFormat.format);
-   SYSTEM_LOG_INFO("Color space format: %x", (uint32_t)mSettings.mSurfaceFormat.colorSpace);
-   SYSTEM_LOG_INFO("Present mode: %x", (uint32_t)mSettings.mPresentMode);
+   SYSTEM_LOG_INFO("Surface format: 0x%x", (uint32_t)mSettings.mSurfaceFormat.format);
+   SYSTEM_LOG_INFO("Color space format: 0x%x", (uint32_t)mSettings.mSurfaceFormat.colorSpace);
+   SYSTEM_LOG_INFO("Present mode: 0x%x", (uint32_t)mSettings.mPresentMode);
    SYSTEM_LOG_INFO("Transfer target: %s", mSettings.mFbTransferTarget == true ? "YES" : "NO");
-   SYSTEM_LOG_INFO("Transform flags: %x", (uint32_t)mSettings.mTransform);
+   SYSTEM_LOG_INFO("Transform flags: 0x%x", (uint32_t)mSettings.mTransform);
 }
 
 //-----------------------------------------------------------------
@@ -239,10 +285,12 @@ bool Vt::Gfx::SwapchainVulkan::isDeviceSuitable(const std::vector<VkSurfaceForma
 //-----------------------------------------------------------------
 //
 bool Vt::Gfx::SwapchainVulkan::restore() {
+   bool status = true;
    if (!mContext.checkDeviceExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME)) {
       VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::restore: VK_KHR_SWAPCHAIN_EXTENSION not supported!");
       return false;
    }
+   releaseImageViews();
    releaseSwapchain();
    //re-create swapchain
    querySwapchainProperties();
@@ -264,11 +312,16 @@ bool Vt::Gfx::SwapchainVulkan::restore() {
    mSettings.mSize = chooseSwapExtent();
 
    //now we can create our swapchain
-   mVkSwapchain = createSwapchain();
+   status &= ((mVkSwapchain = createSwapchain()) != nullptr);
+
+   //create image views, if swapchain is used as render target
+   if (!mSettings.mFbTransferTarget) {
+      status &= createImageViews();
+   }
 
    //write some logs
    logSwapchainProperties();
-   return true;
+   return status;
 }
 
 //-----------------------------------------------------------------

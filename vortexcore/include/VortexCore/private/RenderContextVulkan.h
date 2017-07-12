@@ -34,6 +34,7 @@ struct SwapchainSettingsVulkan {
    VkExtent2D mSize;
    bool mFbTransferTarget{ false };
    VkSurfaceTransformFlagBitsKHR mTransform{ VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR };
+   bool mSupportBlit{ false };
 };
 
 

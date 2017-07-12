@@ -7,9 +7,9 @@
 
 
 Vt::Gfx::RenderContext::RenderContext(const std::shared_ptr<Vt::App::AppWindow> &window, const RenderContextLayout &layout) :
-     mWindow(window)
-   , mLayout(layout) 
-   , mVkContext(nullptr){
+   mWindow(window)
+   , mLayout(layout)
+   , mVkContext(nullptr) {
 }
 
 
@@ -30,7 +30,7 @@ void Vt::Gfx::RenderContext::init() {
          mVkContext = std::unique_ptr<RenderContextVulkan>(new RenderContextVulkan(settings));
          if (mVkContext) {
             //we find a suitable vulkan device
-            auto physicalDevice= mVkContext->enumerateAndSelectDevice(Vt::Gfx::DeviceSelectionVulkan::AUTO_SELECT);
+            auto physicalDevice = mVkContext->enumerateAndSelectDevice(Vt::Gfx::DeviceSelectionVulkan::AUTO_SELECT);
             //next we create a logical device
             VkDevice device{ nullptr };
             if (physicalDevice) {
@@ -41,13 +41,13 @@ void Vt::Gfx::RenderContext::init() {
                queueCreateInfo.mComputeQueueExclusive = true;
                queueCreateInfo.mTransferQueueCount = QueueCreationInfo::QueueCount::MAX;
                queueCreateInfo.mTransferQueueExclusive = true;
-               
+
                //first we create a window surface, this is due to the device needing to create a
                //present queue based on the swapchain
                //For headless rendering we skip this
                createWindowSurface();
                //only then we can create a device
-               device= mVkContext->createDevice(physicalDevice, queueCreateInfo);
+               device = mVkContext->createDevice(physicalDevice, queueCreateInfo);
             }
             if (device) {
                //now we can init the swapchain
@@ -86,14 +86,18 @@ const Vt::Gfx::RenderContextLayout & Vt::Gfx::RenderContext::layout() const {
 
 bool Vt::Gfx::RenderContext::createWindowSurface() {
    Vt::Gfx::SwapchainSettingsVulkan swapchainSettings{
-
+      { VK_FORMAT_UNDEFINED, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR }, //format, colorspace
+      { VK_PRESENT_MODE_IMMEDIATE_KHR }, //no v-sync
+      { 0, 0 }, //window size - default
+      { false }, //transfer target
+      { VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR } //transform
    };
    mSwapchain = mVkContext->createWindowSurfaceAndSwapchain(*mWindow.get(), swapchainSettings);
    return (mSwapchain.lock() != nullptr);
 }
 
 bool Vt::Gfx::RenderContext::restoreSwapChain() {
-   auto sc = mSwapchain.lock(); 
+   auto sc = mSwapchain.lock();
    return sc->restore();;
 }
 

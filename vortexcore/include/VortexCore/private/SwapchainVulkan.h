@@ -77,6 +77,14 @@ class SwapchainVulkan {
    VkSwapchainKHR createSwapchain();
 
    //-----------------------------------------------------------------
+   // Create image views for swapchain
+   bool createImageViews();
+
+   //-----------------------------------------------------------------
+   // Release swapchain image views
+   void releaseImageViews();
+
+   //-----------------------------------------------------------------
    // Do some logging
    void logSwapchainProperties();
 
@@ -106,6 +114,8 @@ public:
    SwapchainSettingsVulkan settings();
 
 private:
+   std::vector<VkImageView>         mSwapChainImageViews;
+   std::vector<VkImage>             mSwapChainImages;
    VkSurfaceKHR                     mVkSurface{ nullptr };
    VkSwapchainKHR                   mVkSwapchain{ nullptr };
    SwapchainSettingsVulkan          mSettings{};
