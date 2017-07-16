@@ -24,6 +24,8 @@ namespace Vt {
             virtual void addScene(std::unique_ptr<Vt::Scene::Scene>&& scene);
             //returs a scene by name
             virtual Vt::Scene::Scene& findSceneByName(const std::string &name);
+            //loads resources
+            virtual void loadResources();
             //returns the associated scene graph
             virtual Vt::Scene::SceneGraph& sceneGraph();
             //returns all active scenes
@@ -32,13 +34,16 @@ namespace Vt {
             virtual std::vector<Vt::Scene::Scene*> visibleScenes();
 
         private:
+           void _loadResources();
+
+        private:
             Vt::Gfx::RenderContext &mRenderContext;
             std::unique_ptr<Vt::Scene::SceneGraph> mSceneGraph;
             std::unordered_map<std::string, std::unique_ptr<Vt::Scene::Scene>> mScenes;
             std::vector<Vt::Scene::Scene*> mActiveScenes;
             std::vector<Vt::Scene::Scene*> mVisibleScenes;
-            std::mutex m_act_lock;
-            std::mutex m_vis_lock;
+            std::recursive_mutex m_act_lock;
+            std::recursive_mutex m_vis_lock;
         };
     }
 }

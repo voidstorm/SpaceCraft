@@ -34,6 +34,11 @@ Vt::Scene::Scene & Vt::Scene::SceneManager::findSceneByName(const std::string & 
 }
 
 //--------------------------------------------------------------------------
+void Vt::Scene::SceneManager::loadResources() {
+   _loadResources();
+}
+
+//--------------------------------------------------------------------------
 Vt::Scene::SceneGraph & Vt::Scene::SceneManager::sceneGraph() {
     return *mSceneGraph.get();
 }
@@ -42,7 +47,7 @@ Vt::Scene::SceneGraph & Vt::Scene::SceneManager::sceneGraph() {
 std::vector<Vt::Scene::Scene*> Vt::Scene::SceneManager::activeScenes() {
    std::vector<Vt::Scene::Scene*> scenes;
    {
-      std::lock_guard<std::mutex> l(m_act_lock);
+      std::lock_guard<decltype(m_act_lock)> l(m_act_lock);
       scenes = mActiveScenes;
    }
    return std::move(scenes);
@@ -52,8 +57,11 @@ std::vector<Vt::Scene::Scene*> Vt::Scene::SceneManager::activeScenes() {
 std::vector<Vt::Scene::Scene*> Vt::Scene::SceneManager::visibleScenes() {
    std::vector<Vt::Scene::Scene*> scenes;
    {
-      std::lock_guard<std::mutex> l(m_vis_lock);
+      std::lock_guard<decltype(m_vis_lock)> l(m_vis_lock);
       scenes = mVisibleScenes;
    }
    return std::move(scenes);
+}
+
+void Vt::Scene::SceneManager::_loadResources() {
 }

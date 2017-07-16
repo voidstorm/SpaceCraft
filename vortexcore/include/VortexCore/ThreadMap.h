@@ -9,6 +9,7 @@ namespace Vt {
             if (true) {
                 TM_WINDOW_LOOP = 0;
                 TM_GAME_LOOP = 1;
+                TM_RENDER_LOOP = 2;
             } else {
                 //ryzen
 
@@ -19,6 +20,7 @@ namespace Vt {
 
         unsigned TM_WINDOW_LOOP = 0;
         unsigned TM_GAME_LOOP = 1;
+        unsigned TM_RENDER_LOOP = 2;
 
     } ThreadMapping;
 

@@ -12,6 +12,7 @@
 namespace Vt {
 namespace Scene {
 class VORTEX_API Scene {
+   friend class Game;
 public:
    Scene(SceneManager& sceneManager);
    virtual ~Scene();

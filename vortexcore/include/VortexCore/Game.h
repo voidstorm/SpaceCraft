@@ -33,12 +33,17 @@ public:
    virtual bool requestShutdown();
    virtual Vt::Scene::SceneManager & sceneManager();
    virtual std::future<int> start();
+   
+   Vt::ThreadContext& renderThread();
+   Vt::ThreadContext& gameThread();
 
 protected:
    //shuts everything down
    virtual int shutdown();
    //runs the main game loop
-   virtual void loop(const std::chrono::high_resolution_clock::duration & delta);
+   virtual void tick(const std::chrono::high_resolution_clock::duration & delta);
+   //runs the render loop
+   virtual void draw(const std::chrono::high_resolution_clock::duration & delta);
 
 protected:
    std::atomic_bool mRunning = false;
@@ -46,6 +51,9 @@ protected:
    std::chrono::high_resolution_clock::time_point mLastTick;
    std::unique_ptr<Gfx::RenderContext> mRenderContext;
    std::unique_ptr<Scene::SceneManager> mSceneManager;
+   std::unique_ptr<Vt::ThreadContext> mRenderThread;
+   std::unique_ptr<Vt::ThreadContext> mGameThread;
+
 
 #ifdef VT_TIMING
    double mTiming = 0.0;
