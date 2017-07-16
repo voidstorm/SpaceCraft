@@ -4,23 +4,27 @@
 #include "..\include\VortexCore\Scene.h"
 
 
+//--------------------------------------------------------------------------
 Vt::Scene::SceneManager::SceneManager(Vt::Gfx::RenderContext &render_context):
     mRenderContext(render_context)
 {
 }
 
-
+//--------------------------------------------------------------------------
 Vt::Scene::SceneManager::~SceneManager() {
 }
 
-Vt::Gfx::RenderContext & Vt::Scene::SceneManager::renderContext() {
+//--------------------------------------------------------------------------
+Vt::Gfx::RenderContext & Vt::Scene::SceneManager::renderContext() const{
     return mRenderContext;
 }
 
+//--------------------------------------------------------------------------
 void Vt::Scene::SceneManager::addScene(std::unique_ptr<Vt::Scene::Scene>&& scene) {
     mScenes.emplace(scene->name(), std::move(scene));
 }
 
+//--------------------------------------------------------------------------
 Vt::Scene::Scene & Vt::Scene::SceneManager::findSceneByName(const std::string & name) {
     auto scene = mScenes.find(name);
     if ( scene != mScenes.end() ) {
@@ -29,6 +33,27 @@ Vt::Scene::Scene & Vt::Scene::SceneManager::findSceneByName(const std::string & 
     throw std::exception((std::string("SceneManager::findSceneByName: ") + name).c_str());
 }
 
+//--------------------------------------------------------------------------
 Vt::Scene::SceneGraph & Vt::Scene::SceneManager::sceneGraph() {
     return *mSceneGraph.get();
+}
+
+//--------------------------------------------------------------------------
+std::vector<Vt::Scene::Scene*> Vt::Scene::SceneManager::activeScenes() {
+   std::vector<Vt::Scene::Scene*> scenes;
+   {
+      std::lock_guard<std::mutex> l(m_act_lock);
+      scenes = mActiveScenes;
+   }
+   return std::move(scenes);
+}
+
+//--------------------------------------------------------------------------
+std::vector<Vt::Scene::Scene*> Vt::Scene::SceneManager::visibleScenes() {
+   std::vector<Vt::Scene::Scene*> scenes;
+   {
+      std::lock_guard<std::mutex> l(m_vis_lock);
+      scenes = mVisibleScenes;
+   }
+   return std::move(scenes);
 }

@@ -34,9 +34,7 @@ Vt::Game::Game(std::unique_ptr<Vt::Gfx::RenderContext> &&render_context) :
    } catch (const std::exception& e) {
       //fail
       VT_EXCEPT_RT(GameException, "Game:::Game Could not init render context!", e);
-
    }
-
    //Create scene manager
    mSceneManager = std::make_unique<Vt::Scene::SceneManager>(this->renderContext());
 }
@@ -75,8 +73,10 @@ Vt::Scene::SceneManager & Vt::Game::sceneManager() {
 //-----------------------------------------------------------------
 //
 int Vt::Game::shutdown() {
+   //unload scenes
+   mSceneManager = nullptr;
    //shutdown render context
-   this->mRenderContext.reset();
+   mRenderContext= nullptr;
    return 0;
 }
 
