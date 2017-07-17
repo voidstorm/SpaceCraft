@@ -10,6 +10,7 @@
 #include "CommandQueue.h"
 #include "ThreadMap.h"
 #include "Delegate.h"
+#include "ScopedTimer.h"
 
 
 
@@ -20,18 +21,19 @@ namespace Vt {
       ThreadContext(const unsigned mapping, bool waitForWork = true) {
          m_work_thread = std::make_unique<std::thread>([&, waitForWork]() {
             SetThreadMapping(mapping);
-            auto lastTime = std::chrono::high_resolution_clock::now();
             while (m_running) {
-               auto now = std::chrono::high_resolution_clock::now();
-               mLastDuration = now - lastTime;
-               lastTime = now;
-               //can take a context param, e.g. the opengl or thread context.
-               while (m_work_items.isWaitingForWork() && waitForWork) {
-                  std::this_thread::yield();
+               {
+                  ScopedTimer<std::chrono::nanoseconds> sc([&, this](std::chrono::high_resolution_clock::duration &d)->void {
+                     mLastDuration = d;
+                  });
+                  //can take a context param, e.g. the opengl or thread context.
+                  while (m_work_items.isWaitingForWork() && waitForWork) {
+                     std::this_thread::yield();
+                  }
+                  OnBeginAlways();
+                  m_work_items.processAllCommands(this);
+                  OnEndAlways();
                }
-               OnBeginAlways();
-               m_work_items.processAllCommands(this);
-               OnEndAlways();
             }
          });
       }
