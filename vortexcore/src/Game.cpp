@@ -59,13 +59,10 @@ Vt::Gfx::RenderContext& Vt::Game::renderContext() {
 //-----------------------------------------------------------------
 // can be overwritten, if returns false, window will not close
 bool Vt::Game::requestShutdown() {
-   mRunning = false;
-
-   if (!mRunning) {
-      auto shutdown_result = shutdown();
-      mShutdown = true;
-      while (!mShutdown) {
-         std::this_thread::yield();
+   if (mRunning) {
+      mRunning = false;
+      if (!mRunning) {
+         auto shutdown_result = shutdown();
       }
    }
    return !mRunning;
@@ -79,12 +76,14 @@ Vt::Scene::SceneManager & Vt::Game::sceneManager() {
 //-----------------------------------------------------------------
 //
 int Vt::Game::shutdown() {
-   mGameThread = nullptr;
-   mRenderThread = nullptr;
+   mGameThread->RequestExit();
+   mGameThread.reset();
+   mRenderThread->RequestExit();
+   mRenderThread.reset();
    //unload scenes
-   mSceneManager = nullptr;
+   mSceneManager.reset();
    //shutdown render context
-   mRenderContext = nullptr;
+   mRenderContext.reset();
    return 0;
 }
 
@@ -116,52 +115,32 @@ std::future<int> Vt::Game::start() {
       }
       //load init resources
       mSceneManager->loadResources();
-      {
-         //render thread
-         auto now = std::chrono::high_resolution_clock::now();
-         auto dur = std::chrono::high_resolution_clock::now() - now;
-         auto last_tick = std::chrono::high_resolution_clock::now();
-         double timing = 0;
-         int counter = 0;
-         mRenderThread = std::make_unique<Vt::ThreadContext>(Vt::ThreadMapping.TM_RENDER_LOOP, false);
-         mRenderThread->OnAlwaysBegin = std::make_unique<std::function<void(void)>>([&, this](void)->void {
-            last_tick = now;
-            draw(dur = ((now = std::chrono::high_resolution_clock::now()) - last_tick));
-#ifdef VT_TIMING
-            if (timing < 1000) {
-               timing += (double)std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1, 1000>>>(dur).count();
-               counter++;
-            } else {
-               auto ms = (timing / double(counter));
-               std::cout << "[VT_TIMING]  Vt::Game::draw: " << ms << " milliseconds, " << 1000.0 / ms << "fps" << std::endl;
-               counter = 0;
-               timing = 0.0;
-            }
-#endif
-         });
-      }
+
+      //render thread
+      mRenderThread = std::make_unique<Vt::ThreadContext>(Vt::ThreadMapping.TM_RENDER_LOOP, false);
+      mRenderThread->OnBeginAlways += [&, this](void)->int {
+         draw(mRenderThread->GetDuration());
+         return 0;
+      };
 
       //game thread
-      {
-         mGameThread = std::make_unique<Vt::ThreadContext>(Vt::ThreadMapping.TM_GAME_LOOP, false);
-         auto now = std::chrono::high_resolution_clock::now();
-         auto dur = std::chrono::high_resolution_clock::now() - now;
-         mGameThread->OnAlwaysBegin = std::make_unique<std::function<void(void)>>([&, this](void)->void {
-            mLastTick = now;
-            tick(dur = ((now = std::chrono::high_resolution_clock::now()) - mLastTick));
+      mGameThread = std::make_unique<Vt::ThreadContext>(Vt::ThreadMapping.TM_GAME_LOOP, false);
+      mGameThread->OnEndAlways += [&, this](void)->bool {
+         tick(mGameThread->GetDuration());
 #ifdef VT_TIMING
-            if (mTiming < 1000) {
-               mTiming += (double)std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1, 1000>>>(dur).count();
-               mCounter++;
-            } else {
-               auto ms = (mTiming / double(mCounter));
-               std::cout << "[VT_TIMING]  Vt::Game::tick: " << ms << " milliseconds, " << 1000.0 / ms << "fps" << std::endl;
-               mCounter = 0;
-               mTiming = 0.0;
-            }
+         if (mTiming < 1000) {
+            mTiming += (double)std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1, 1000>>>(mGameThread->GetDuration()).count();
+            mCounter++;
+         } else {
+            auto ms = (mTiming / double(mCounter));
+            std::cout << "[VT_TIMING]  Vt::Game::tick: " << ms << " milliseconds, " << 1000.0 / ms << "fps" << std::endl;
+            mCounter = 0;
+            mTiming = 0.0;
+         }
 #endif
-         });
-      }
+         return 0;
+      };
+
       return 0;
    });
 }
