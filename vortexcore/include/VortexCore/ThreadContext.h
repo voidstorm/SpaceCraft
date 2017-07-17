@@ -55,8 +55,8 @@ namespace Vt {
          return mLastDuration;
       }
 
-      Delegate<int> OnBeginAlways;
-      Delegate<bool> OnEndAlways;
+      Delegate<void> OnBeginAlways;
+      Delegate<void> OnEndAlways;
 
    private:
 		CommandQueue m_work_items;

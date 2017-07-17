@@ -118,14 +118,13 @@ std::future<int> Vt::Game::start() {
 
       //render thread
       mRenderThread = std::make_unique<Vt::ThreadContext>(Vt::ThreadMapping.TM_RENDER_LOOP, false);
-      mRenderThread->OnBeginAlways += [&, this](void)->int {
+      mRenderThread->OnBeginAlways += [&, this](void)->void {
          draw(mRenderThread->GetDuration());
-         return 0;
       };
 
       //game thread
       mGameThread = std::make_unique<Vt::ThreadContext>(Vt::ThreadMapping.TM_GAME_LOOP, false);
-      mGameThread->OnEndAlways += [&, this](void)->bool {
+      mGameThread->OnBeginAlways += [&, this](void)->void {
          tick(mGameThread->GetDuration());
 #ifdef VT_TIMING
          if (mTiming < 1000) {
@@ -138,7 +137,6 @@ std::future<int> Vt::Game::start() {
             mTiming = 0.0;
          }
 #endif
-         return 0;
       };
 
       return 0;
