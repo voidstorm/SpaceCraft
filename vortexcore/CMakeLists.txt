@@ -12,6 +12,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(AddDeps)
 
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GF /Zc:wchar_t /W3 /Wp64")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
 
 find_package(Vulkan)
 find_package(GLM)
@@ -120,12 +123,26 @@ set(TEST_FILES
 )
 
 
+set(SHADER_FILES_DEFAULT
+ shader/default.comp
+ shader/default.frag
+ shader/default.geom
+ shader/default.vert
+)
+
+ source_group("shader"           FILES ${SHADER_FILES_DEFAULT})
+
+
 set(ALL_SOURCE_FILES
   ${SOURCE_FILES}
   ${TEST_FILES}
   ${SOURCE_FILES_WIN32}
-  ${IMGUI_LIBRARY}  
+  ${IMGUI_LIBRARY}
+  ${SHADER_FILES_DEFAULT}
 )
+
+#SHADER
+
 
 
 #add_library(${CURRENT_MODULE_NAME} SHARED ${SOURCE_FILES})

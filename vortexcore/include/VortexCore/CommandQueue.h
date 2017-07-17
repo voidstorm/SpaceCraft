@@ -5,13 +5,13 @@
 #include <future>
 #include <atomic>
 #include <condition_variable>
-#include <boost\variant\variant.hpp>
+#include <variant>
 
 namespace Vt {
 	//---------------------------------------------------------------------------------------
 	class CommandQueue {
 	public:
-		typedef boost::variant<bool, int, float, double, void*, std::string> CMD_RET_TYPE;
+		typedef std::variant<bool, int, float, double, void*, std::string> CMD_RET_TYPE;
 		//typedef boost::any MSG_RET_TYPE;
 		typedef std::function<CMD_RET_TYPE(void*)> CMD_FUN_TYPE;
 

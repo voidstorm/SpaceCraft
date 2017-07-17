@@ -135,7 +135,7 @@ VkExtent2D Vt::Gfx::SwapchainVulkan::chooseSwapExtent() {
       return actualExtent;
    }
 }
-
+ 
 //-----------------------------------------------------------------
 // create the swapchain
 VkSwapchainKHR Vt::Gfx::SwapchainVulkan::createSwapchain() {
