@@ -126,17 +126,17 @@ std::future<int> Vt::Game::start() {
       mGameThread = std::make_unique<Vt::ThreadContext>(Vt::ThreadMapping.TM_GAME_LOOP, false);
       mGameThread->OnBeginAlways += [&, this](void)->void {
          tick(mGameThread->GetDuration());
-#ifdef VT_TIMING
-         if (mTiming < 1000) {
-            mTiming += (double)std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1, 1000>>>(mGameThread->GetDuration()).count();
-            mCounter++;
-         } else {
-            auto ms = (mTiming / double(mCounter));
-            std::cout << "[VT_TIMING]  Vt::Game::tick: " << ms << " milliseconds, " << 1000.0 / ms << "fps" << std::endl;
-            mCounter = 0;
-            mTiming = 0.0;
-         }
-#endif
+//#ifdef VT_TIMING
+//         if (mTiming < 1000) {
+//            mTiming += (double)std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1, 1000>>>(mGameThread->GetDuration()).count();
+//            mCounter++;
+//         } else {
+//            auto ms = (mTiming / double(mCounter));
+//            std::cout << "[VT_TIMING]  Vt::Game::tick: " << ms << " milliseconds, " << 1000.0 / ms << "fps" << std::endl;
+//            mCounter = 0;
+//            mTiming = 0.0;
+//         }
+//#endif
       };
 
       return 0;

@@ -18,7 +18,7 @@ namespace Vt {
 	//---------------------------------------------------------------------------------------
    class ThreadContext final {
 	public:
-      ThreadContext(const unsigned mapping, bool waitForWork = true) {
+      ThreadContext(const unsigned long long mapping, bool waitForWork = true) {
          m_work_thread = std::make_unique<std::thread>([&, waitForWork]() {
             SetThreadMapping(mapping);
             while (m_running.load(std::memory_order::memory_order_acquire)) {
