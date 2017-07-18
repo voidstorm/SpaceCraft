@@ -3,9 +3,14 @@
 #include <memory>
 #include <atomic>
 #include <functional>
+#include <chrono>
+#include <atomic>
+#include <iostream>
 
 #include "CommandQueue.h"
 #include "ThreadMap.h"
+#include "Delegate.h"
+#include "ScopedTimer.h"
 
 
 
@@ -13,46 +18,52 @@ namespace Vt {
 	//---------------------------------------------------------------------------------------
    class ThreadContext final {
 	public:
-		ThreadContext(const unsigned mapping, bool waitForWork = true);
-		~ThreadContext();
-		CommandQueue& GetCommandQueue();
+      ThreadContext(const unsigned mapping, bool waitForWork = true) {
+         m_work_thread = std::make_unique<std::thread>([&, waitForWork]() {
+            SetThreadMapping(mapping);
+            while (m_running) {
+               {
+                  ScopedTimer<std::chrono::nanoseconds> sc([&, this](std::chrono::high_resolution_clock::duration &d)->void {
+                     mLastDuration = d;
+                  });
+                  //can take a context param, e.g. the opengl or thread context.
+                  while (m_work_items.isWaitingForWork() && waitForWork) {
+                     std::this_thread::yield();
+                  }
+                  OnBeginAlways();
+                  m_work_items.processAllCommands(this);
+                  OnEndAlways();
+               }
+            }
+         });
+      }
 
-      std::unique_ptr<std::function<void(void)>> OnAlwaysBegin;
-      std::unique_ptr<std::function<void(void)>> OnAlwaysEnd;
-	private:
+      ~ThreadContext() {
+         RequestExit();
+      }
+
+      void RequestExit(){
+         m_running.store(false);
+         if (m_work_thread->joinable()) {
+            m_work_thread->join();
+         }
+      }
+
+      CommandQueue& GetCommandQueue() {
+         return m_work_items;
+      }
+   
+      std::chrono::high_resolution_clock::duration GetDuration() const {
+         return mLastDuration;
+      }
+
+      Delegate<void> OnBeginAlways;
+      Delegate<void> OnEndAlways;
+
+   private:
 		CommandQueue m_work_items;
 		std::unique_ptr<std::thread> m_work_thread;
 		std::atomic_bool m_running = true;
-	};
-
-	//---------------------------------------------------------------------------------------
-	ThreadContext::ThreadContext(const unsigned mapping, bool waitForWork) {
-		m_work_thread = std::make_unique<std::thread>([&, waitForWork]() {
-         SetThreadMapping(mapping);
-			while (m_running) {
-				//can take a context param, e.g. the opengl or thread context.
-				while (m_work_items.isWaitingForWork() && waitForWork) {
-					std::this_thread::yield();
-				}
-            if (OnAlwaysBegin) {
-               (*OnAlwaysBegin)();
-            }
-				m_work_items.processAllCommands(this);
-            if (OnAlwaysEnd) {
-               (*OnAlwaysEnd)();
-            }
-			}
-		});
-	}
-
-	//---------------------------------------------------------------------------------------
-	ThreadContext::~ThreadContext() {
-		m_running.store(false);
-      m_work_thread->join();
-	}
-
-	//---------------------------------------------------------------------------------------
-	CommandQueue& ThreadContext::GetCommandQueue() {
-		return m_work_items;
-	}
+      std::atomic<std::chrono::high_resolution_clock::duration> mLastDuration;
+   };
 }
