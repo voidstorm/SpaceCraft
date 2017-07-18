@@ -11,7 +11,6 @@ namespace App {
 namespace Private {
 
 std::atomic<int> OSAppWindow::refCount_ = { 0 };
-std::atomic<bool> OSAppWindow::lock_ = { false };
 std::map<HWND, OSAppWindow*> OSAppWindow::windows_ = std::map<HWND, OSAppWindow*>();
 
 //-------------------------------------------------------------------------
@@ -50,7 +49,6 @@ OSAppWindow::~OSAppWindow(void) {
    if (refCount_ == 0) {
       UnregisterClass(L"VortexCoreWindowClass", 0);
    }
-   lock_ = false;
 }
 
 //-------------------------------------------------------------------------
@@ -317,7 +315,6 @@ int OSAppWindow::run() {
 
 //-------------------------------------------------------------------------
 void OSAppWindow::close() {
-   lock_ = true;
    this->stopTimer();
    close_ = true;
    PostMessage(this->hwnd_, WM_CLOSE, 0, 0);
