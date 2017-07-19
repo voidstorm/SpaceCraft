@@ -75,7 +75,6 @@ protected:
 protected:
    static std::atomic<int> refCount_;
    static std::map<HWND, OSAppWindow*> windows_;
-   static std::atomic<bool> lock_;
    typedef std::map<HWND, OSAppWindow*>::iterator WindowIter_;
    HINSTANCE	hinstance_;
    HWND		hwnd_;

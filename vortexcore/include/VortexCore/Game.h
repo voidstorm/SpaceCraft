@@ -47,7 +47,6 @@ protected:
 
 protected:
    std::atomic_bool mRunning = false;
-   std::atomic_bool mShutdown = false;
    std::unique_ptr<Gfx::RenderContext> mRenderContext;
    std::unique_ptr<Scene::SceneManager> mSceneManager;
    std::unique_ptr<Vt::ThreadContext> mRenderThread;
