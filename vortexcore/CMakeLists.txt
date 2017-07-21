@@ -51,6 +51,7 @@ include_directories (
 
 set(PUBLIC_HEADER_FILES
   include/VortexCore/Api.h
+  include/VortexCore/AlignedStorage.h
   include/VortexCore/AppWindow.h
   include/VortexCore/CameraComponent.h
   include/VortexCore/CommandQueue.h

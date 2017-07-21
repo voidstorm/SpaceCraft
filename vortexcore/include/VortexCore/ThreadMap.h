@@ -26,7 +26,7 @@ struct ThreadMapping_t {
 } ThreadMapping;
 
 inline void SetThreadMapping(const unsigned long long mapping) {
-   SetThreadIdealProcessor(GetCurrentThread(), mapping);
+   SetThreadIdealProcessor(GetCurrentThread(), (DWORD)mapping);
    //SetThreadAffinityMask(GetCurrentThread(), mapping);
 }
 }
