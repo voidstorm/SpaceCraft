@@ -2,7 +2,7 @@
 #include "..\include\VortexCore\private\SwapchainVulkan.h"
 
 #include "..\include\VortexCore\AppWindow.h"
-
+#include <algorithm>
 
 std::atomic<unsigned>  Vt::Gfx::RenderContextVulkan::mInstanceCount = 0;
 
@@ -327,7 +327,10 @@ uint32_t Vt::Gfx::RenderContextVulkan::findPresentQueueFamilyIndex() {
 //-----------------------------------------------------------------
 // Creates a logical device
 
-VkDevice Vt::Gfx::RenderContextVulkan::createDevice(const VkPhysicalDevice device, const QueueCreationInfo & queueCreateInfo) {
+VkDevice Vt::Gfx::RenderContextVulkan::createDevice(const VkPhysicalDevice device,
+   const QueueCreationInfo & queueCreateInfo,
+   const std::vector<std::string> &requiredDeviceExtensions,
+   const std::vector<std::string> &optionalDeviceExtensions) {
 
    mQueueConfiguration = queueCreateInfo;
    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos{};
@@ -428,12 +431,29 @@ VkDevice Vt::Gfx::RenderContextVulkan::createDevice(const VkPhysicalDevice devic
 
    //push all extensions
    std::vector<const char*> deviceExtensions;
-   for (auto & ext : mDeviceProperties.mExtensions) {
-      // Enable the debug marker extension if it is present (likely meaning a debugging tool is present)
-      if (ext == std::string(VK_EXT_DEBUG_MARKER_EXTENSION_NAME)) {
-         mDeviceProperties.mDebugMarkers = true;
+   for (auto & ext : requiredDeviceExtensions) {
+      if (std::any_of(std::begin(mDeviceProperties.mExtensions), std::end(mDeviceProperties.mExtensions), [&](const std::string &item)->bool {
+         return item == ext;
+      })) {
+         SYSTEM_LOG_INFO("Loaded required extension: %s", ext.c_str());
+         deviceExtensions.push_back(ext.c_str());
+      } else {
+         SYSTEM_LOG_ERROR("Extension required but not supported: %s", ext.c_str());
+         VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::createDevice: vkCreateDevice failed!");
       }
-      deviceExtensions.push_back(ext.c_str());
+   }
+
+   for (auto & ext : optionalDeviceExtensions) {
+      if (std::any_of(std::begin(mDeviceProperties.mExtensions), std::end(mDeviceProperties.mExtensions), [&](const std::string &item)->bool {
+         return item == ext;
+      })) {
+         // Enable the debug marker extension if it is present (likely meaning a debugging tool is present)
+         if (ext == std::string(VK_EXT_DEBUG_MARKER_EXTENSION_NAME)) {
+            mDeviceProperties.mDebugMarkers = true;
+         }
+         SYSTEM_LOG_INFO("Loaded optional extension: %s", ext.c_str());
+         deviceExtensions.push_back(ext.c_str());
+      }
    }
 
    VkDeviceCreateInfo deviceCreateInfo = {};
@@ -666,7 +686,7 @@ bool Vt::Gfx::RenderContextVulkan::checkInstanceExtension(const std::string & ex
 //--------------------------------------------------------------------------
 bool Vt::Gfx::RenderContextVulkan::checkDeviceExtension(const std::string & extension) {
    for (auto & ext : mDeviceProperties.mExtensions) {
-      if(ext == extension){ 
+      if (ext == extension) {
          return true;
       }
    }

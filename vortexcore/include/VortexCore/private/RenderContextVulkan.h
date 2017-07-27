@@ -133,7 +133,10 @@ class RenderContextVulkan {
 
    //-----------------------------------------------------------------
    // Creates a logical device
-   VkDevice createDevice(const VkPhysicalDevice device, const QueueCreationInfo & queueCreateInfo);
+   VkDevice createDevice(  const VkPhysicalDevice device, 
+                           const QueueCreationInfo & queueCreateInfo, 
+                           const std::vector<std::string> &requiredDeviceExtensions,
+                           const std::vector<std::string> &optionalDeviceExtensions);
 
    //-----------------------------------------------------------------
    // Creates a swapchain
