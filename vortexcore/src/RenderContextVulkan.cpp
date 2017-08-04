@@ -456,6 +456,9 @@ VkDevice Vt::Gfx::RenderContextVulkan::createDevice(const VkPhysicalDevice devic
       }
    }
 
+   //we overwrite available extensions with the actual loaded extensions
+
+
    VkDeviceCreateInfo deviceCreateInfo = {};
    deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
    deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());;

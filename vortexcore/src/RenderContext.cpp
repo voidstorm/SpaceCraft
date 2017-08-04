@@ -46,16 +46,18 @@ void Vt::Gfx::RenderContext::init() {
                //present queue based on the swapchain
                //For headless rendering we skip this
                createWindowSurface();
-               //only then we can create a device
+               
+               //required extensions
                std::vector<std::string> requiredDeviceExtensions{
                   VK_KHR_SWAPCHAIN_EXTENSION_NAME,
                   VK_KHR_MAINTENANCE1_EXTENSION_NAME
                };
 
+               //optional extensions
                std::vector<std::string> optionalDeviceExtensions{
                   VK_EXT_DEBUG_MARKER_EXTENSION_NAME
                };
-
+               //then we create a device
                device = mVkContext->createDevice(physicalDevice, queueCreateInfo, requiredDeviceExtensions, optionalDeviceExtensions);
             }
             if (device) {
