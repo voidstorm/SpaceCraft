@@ -61,7 +61,7 @@ struct DevicePropertiesVulkan {
 
 struct QueueCreationInfo {
    enum class QueueCount {
-      _1= 1,
+      _1 = 1,
       _2,
       _3,
       _4,
@@ -86,7 +86,7 @@ struct QueueFamilyIndex {
 };
 
 enum class QueueType {
-   GRAPHICS= 0,
+   GRAPHICS = 0,
    COMPUTE,
    TRANSFER,
    PRESENT
@@ -101,7 +101,7 @@ class RenderContextVulkan {
 
    //--------------------------------------------------------------------------
    // Ctor, creates a vk instance
-   RenderContextVulkan(const RenderContextVulkanSettings &settings);
+   RenderContextVulkan(const Vt::App::AppWindow & window, const RenderContextVulkanSettings &settings);
 
    //--------------------------------------------------------------------------
    // D'tor
@@ -133,21 +133,21 @@ class RenderContextVulkan {
 
    //-----------------------------------------------------------------
    // Creates a logical device
-   VkDevice createDevice(  const VkPhysicalDevice device, 
-                           const QueueCreationInfo & queueCreateInfo, 
-                           const std::vector<std::string> &requiredDeviceExtensions,
-                           const std::vector<std::string> &optionalDeviceExtensions);
+   VkDevice createDevice(const VkPhysicalDevice device,
+      const QueueCreationInfo & queueCreateInfo,
+      const std::vector<std::string> &requiredDeviceExtensions,
+      const std::vector<std::string> &optionalDeviceExtensions);
 
    //-----------------------------------------------------------------
    // Creates a swapchain
-   std::weak_ptr<Vt::Gfx::SwapchainVulkan> createWindowSurfaceAndSwapchain(const Vt::App::AppWindow & window, const SwapchainSettingsVulkan & swapchainSettings);
+   std::weak_ptr<Vt::Gfx::SwapchainVulkan> createWindowSurfaceAndSwapchain(const SwapchainSettingsVulkan & swapchainSettings);
 
    //-----------------------------------------------------------------
    //log some useful adapter info
-   void logAdapterProperties( const VkPhysicalDeviceProperties & deviceProperties, 
-                              const std::vector<VkQueueFamilyProperties> & queueProperties,
-                              const VkPhysicalDeviceFeatures & features,
-                              const VkPhysicalDeviceMemoryProperties & memoryInfo,
+   void logAdapterProperties(const VkPhysicalDeviceProperties & deviceProperties,
+      const std::vector<VkQueueFamilyProperties> & queueProperties,
+      const VkPhysicalDeviceFeatures & features,
+      const VkPhysicalDeviceMemoryProperties & memoryInfo,
       const std::vector<std::string> & extensions);
 
 
@@ -210,6 +210,7 @@ class RenderContextVulkan {
 
    //--------------------------------------------------------------------------
    //members
+   const Vt::App::AppWindow         & mWindow;
    std::shared_ptr<SwapchainVulkan> mSwapchain;
    VkInstance                       mVkInstance{ nullptr };
    VkPhysicalDevice                 mPhysicalDevice{ nullptr };

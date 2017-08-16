@@ -60,6 +60,14 @@ void Vt::App::AppWindow::close() {
    mImpl->close();
 }
 
+void Vt::App::AppWindow::lock()  const {
+   mImpl->lock();
+}
+
+void Vt::App::AppWindow::unlock() const {
+   mImpl->unlock();
+}
+
 
 int Vt::App::AppWindow::exec() {
    return Vt::App::Private::OSAppWindow::run();

@@ -7,6 +7,7 @@
 
 #include "..\SystemLogger.h"
 #include "VkErrorHelper.h"
+#include <mutex>
 
 namespace Vt {
 namespace Gfx {
@@ -36,7 +37,7 @@ class SwapchainVulkan {
 
    //--------------------------------------------------------------------------
    // Ctor, creates a vk instance
-   SwapchainVulkan(const SwapchainSettingsVulkan &settings, RenderContextVulkan &context);
+   SwapchainVulkan(const Vt::App::AppWindow & window, const SwapchainSettingsVulkan &settings, RenderContextVulkan &context);
 
    //--------------------------------------------------------------------------
    // D'tor
@@ -45,7 +46,7 @@ class SwapchainVulkan {
 
    //-----------------------------------------------------------------
    // Creates a window surface for presentation
-   VkSurfaceKHR createSurface(const Vt::App::AppWindow & window);
+   VkSurfaceKHR createSurface();
 
    //-----------------------------------------------------------------
    // Returns the window surface
@@ -99,8 +100,8 @@ public:
    // If none is specified it returns true if at least one format and mode
    // is available
    // Note, that right now checking of device formats is not implemented
-   bool isDeviceSuitable(const std::vector<VkSurfaceFormatKHR> formats = std::vector<VkSurfaceFormatKHR>{}, 
-                         const std::vector<VkPresentModeKHR> presentModes = std::vector<VkPresentModeKHR>{});
+   bool isDeviceSuitable(const std::vector<VkSurfaceFormatKHR> formats = std::vector<VkSurfaceFormatKHR>{},
+      const std::vector<VkPresentModeKHR> presentModes = std::vector<VkPresentModeKHR>{});
 
    //-----------------------------------------------------------------
    // Restores the swapchain
@@ -114,6 +115,7 @@ public:
    SwapchainSettingsVulkan settings();
 
 private:
+   const Vt::App::AppWindow &       mWindow;
    std::vector<VkImageView>         mSwapChainImageViews;
    std::vector<VkImage>             mSwapChainImages;
    VkSurfaceKHR                     mVkSurface{ nullptr };

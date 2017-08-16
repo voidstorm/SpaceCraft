@@ -14,8 +14,9 @@ VkDebugReportCallbackEXT  Vt::Gfx::RenderContextVulkan::sMsgCallback = VK_NULL_H
 //--------------------------------------------------------------------------
 // Ctor, creates a vk instance
 
-Vt::Gfx::RenderContextVulkan::RenderContextVulkan(const RenderContextVulkanSettings & settings) :
-   mContextSettings(settings) {
+Vt::Gfx::RenderContextVulkan::RenderContextVulkan(const Vt::App::AppWindow & window, const RenderContextVulkanSettings & settings) :
+    mWindow(window)
+   ,mContextSettings(settings) {
    mVkInstance = vkInstance();
    if (!mVkInstance) {
       VT_EXCEPT(RenderContextVkException, "RenderContextVulkan::RenderContextVulkan: Could not create vulkan instance!");
@@ -502,10 +503,10 @@ VkDevice Vt::Gfx::RenderContextVulkan::createDevice(const VkPhysicalDevice devic
 
 //-----------------------------------------------------------------
 //
-std::weak_ptr<Vt::Gfx::SwapchainVulkan> Vt::Gfx::RenderContextVulkan::createWindowSurfaceAndSwapchain(const Vt::App::AppWindow & window, const SwapchainSettingsVulkan & swapchainSettings) {
-   mSwapchain = std::unique_ptr<Vt::Gfx::SwapchainVulkan>(new SwapchainVulkan(swapchainSettings, *this));
+std::weak_ptr<Vt::Gfx::SwapchainVulkan> Vt::Gfx::RenderContextVulkan::createWindowSurfaceAndSwapchain(const SwapchainSettingsVulkan & swapchainSettings) {
+   mSwapchain = std::unique_ptr<Vt::Gfx::SwapchainVulkan>(new SwapchainVulkan(mWindow, swapchainSettings, *this));
    //create window surface
-   mSwapchain->createSurface(window);
+   mSwapchain->createSurface();
    //find and set a proper present queue
    mQueueIndices.mPresent = findPresentQueueFamilyIndex();
    return mSwapchain;

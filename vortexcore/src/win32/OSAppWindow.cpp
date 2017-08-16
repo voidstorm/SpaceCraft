@@ -12,6 +12,7 @@ namespace Private {
 
 std::atomic<int> OSAppWindow::refCount_ = { 0 };
 std::map<HWND, OSAppWindow*> OSAppWindow::windows_ = std::map<HWND, OSAppWindow*>();
+std::recursive_mutex OSAppWindow::windowLock_;
 
 //-------------------------------------------------------------------------
 OSAppWindow::OSAppWindow(Vt::App::AppWindow &backptr, std::wstring name, int width, int height, unsigned style, bool visible) : width_(width), height_(height), style_(style),
@@ -304,7 +305,10 @@ int OSAppWindow::run() {
    while (refCount_) {
        if (GetMessage(&msg, NULL, 0, 0)){
            TranslateMessage(&msg);
-           DispatchMessage(&msg);
+           {
+              //std::lock_guard<std::recursive_mutex> l(windowLock_);
+              DispatchMessage(&msg);
+           }
        }
    }
    return 0;
@@ -315,6 +319,16 @@ void OSAppWindow::close() {
    this->stopTimer();
    close_ = true;
    PostMessage(this->hwnd_, WM_CLOSE, 0, 0);
+}
+
+//-------------------------------------------------------------------------
+void OSAppWindow::lock()  const {
+   windowLock_.lock();
+}
+
+//-------------------------------------------------------------------------
+void OSAppWindow::unlock()  const {
+   windowLock_.unlock();
 }
 
 //-------------------------------------------------------------------------

@@ -78,6 +78,8 @@ public:
    virtual void startTimer(int ms);
    virtual void stopTimer();
    virtual void close();
+   virtual void lock() const;
+   virtual void unlock() const;
    static VORTEX_API int exec();
    static VORTEX_API std::weak_ptr <AppWindow> create(std::wstring name, int width = 640, int height = 480, Style style = Style::ws_overlappedwindow, bool visible = true);
 

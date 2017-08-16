@@ -27,7 +27,7 @@ void Vt::Gfx::RenderContext::init() {
 #endif
       try {
          //first we create a vulkan instance
-         mVkContext = std::unique_ptr<RenderContextVulkan>(new RenderContextVulkan(settings));
+         mVkContext = std::unique_ptr<RenderContextVulkan>(new RenderContextVulkan(*(mWindow.get()), settings));
          if (mVkContext) {
             //we find a suitable vulkan device
             auto physicalDevice = mVkContext->enumerateAndSelectDevice(Vt::Gfx::DeviceSelectionVulkan::AUTO_SELECT);
@@ -103,7 +103,7 @@ bool Vt::Gfx::RenderContext::createWindowSurface() {
       { false }, //transfer target
       { VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR } //transform
    };
-   mSwapchain = mVkContext->createWindowSurfaceAndSwapchain(*mWindow.get(), swapchainSettings);
+   mSwapchain = mVkContext->createWindowSurfaceAndSwapchain(swapchainSettings);
    return (mSwapchain.lock() != nullptr);
 }
 

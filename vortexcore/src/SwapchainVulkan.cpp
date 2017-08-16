@@ -14,7 +14,8 @@
 //--------------------------------------------------------------------------
 // Ctor, creates a vk instance
 
-Vt::Gfx::SwapchainVulkan::SwapchainVulkan(const SwapchainSettingsVulkan & settings, RenderContextVulkan &context) :
+Vt::Gfx::SwapchainVulkan::SwapchainVulkan(const Vt::App::AppWindow & window, const SwapchainSettingsVulkan & settings, RenderContextVulkan &context) :
+   mWindow(window),
    mSettings(settings),
    mContext(context) {
 
@@ -31,12 +32,12 @@ Vt::Gfx::SwapchainVulkan::~SwapchainVulkan() {
 
 //-----------------------------------------------------------------
 //
-VkSurfaceKHR Vt::Gfx::SwapchainVulkan::createSurface(const Vt::App::AppWindow & window) {
+VkSurfaceKHR Vt::Gfx::SwapchainVulkan::createSurface() {
 
    VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
    surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-   surfaceCreateInfo.hinstance = (HINSTANCE)window.instance();
-   surfaceCreateInfo.hwnd = window.winId();
+   surfaceCreateInfo.hinstance = (HINSTANCE)mWindow.instance();
+   surfaceCreateInfo.hwnd = mWindow.winId();
    VkSurfaceKHR surface{ nullptr };
    VK_CHECK_RESULT(vkCreateWin32SurfaceKHR(mContext.vkInstance(), &surfaceCreateInfo, nullptr, &surface));
    if (!surface) {
@@ -327,7 +328,8 @@ bool Vt::Gfx::SwapchainVulkan::restore() {
 //-----------------------------------------------------------------
 //
 bool Vt::Gfx::SwapchainVulkan::swapBuffers() {
-
+   //mWindow.lock();
+   //mWindow.unlock();
    return false;
 }
 

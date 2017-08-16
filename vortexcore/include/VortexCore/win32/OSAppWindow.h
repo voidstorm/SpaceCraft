@@ -8,6 +8,7 @@
 #include <thread>
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <string>
 
 
@@ -15,7 +16,7 @@ namespace Vt {
 namespace App {
 class AppWindow;
 namespace Private {
-class OSAppWindow {
+class OSAppWindow final {
 public:
    enum MouseButton {
       null_ = 0,
@@ -26,53 +27,55 @@ public:
    };
 public:
    OSAppWindow(Vt::App::AppWindow &backptr, std::wstring name = L"evolution engine", int width = 640, int height = 480, unsigned style = WS_OVERLAPPEDWINDOW, bool visible = false);
-   virtual ~OSAppWindow(void);
-   virtual HWND handle();
-   virtual HWND winId(); //for Qt compatibility
-   virtual HINSTANCE instance(); //for Qt compatibility
+   ~OSAppWindow(void);
+   HWND handle();
+   HWND winId(); //for Qt compatibility
+   HINSTANCE instance(); //for Qt compatibility
    static int run();
    static LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
    static void registerWndClass(HINSTANCE hinstance, int color);
 
-   virtual int width();
-   virtual int height();
-   virtual void show();
-   virtual void hide();
-   virtual void setSize(int width, int height);
-   virtual void startTimer(int ms);
-   virtual void stopTimer();
-   virtual void close();
-   //events
-   virtual void onCreate();
-   virtual void onTimer();
-   virtual bool onClose();
-   virtual void onPaint();
-   virtual void onMove(int x, int y);
-   virtual void onRestore();
-   virtual void onMinimize();
-   virtual void onMaximize();
-   virtual void onShow();
-   virtual void onHide();
-   virtual void onResize(int width, int height);
-   virtual void onResized(int width, int height);
-   virtual void onKeydown(uint64_t key, uint64_t shift, uint64_t alt, uint64_t ctrl);
-   virtual void onKeyup(uint64_t key, uint64_t shift, uint64_t alt, uint64_t ctrl);
-   virtual void onCharKey(uint64_t key, uint64_t shift, uint64_t alt, uint64_t ctrl);
-   virtual void onMouseButtonDown(int x, int y, unsigned button, unsigned shift, unsigned alt, unsigned ctrl);
-   virtual void onMouseButtonUp(int x, int y, unsigned button, unsigned shift, unsigned alt, unsigned ctrl);
-   virtual void onMouseDblClick(int x, int y, unsigned button, unsigned shift, unsigned alt, unsigned ctrl);
-   virtual void onMouseMove(int x, int y, unsigned button, unsigned shift, unsigned alt, unsigned ctrl);
-   virtual void onMouseWheel(int clicks, unsigned button, unsigned shift, unsigned alt, unsigned ctrl);
-   static bool isKeyDown(uint64_t key);
-   virtual bool getCursorPos(int& x, int& y);
-   virtual void setCursorPos(int x, int y);
-   virtual RECT getWindowRect();
-protected:
-   void release();
-   virtual void timer(void* param);
-   virtual LRESULT processMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+   int width();
+   int height();
+   void show();
+   void hide();
+   void setSize(int width, int height);
+   void startTimer(int ms);
+   void stopTimer();
+   void close();
+   void lock() const;
+   void unlock() const;
 
-protected:
+   //events
+   void onCreate();
+   void onTimer();
+   bool onClose();
+   void onPaint();
+   void onMove(int x, int y);
+   void onRestore();
+   void onMinimize();
+   void onMaximize();
+   void onShow();
+   void onHide();
+   void onResize(int width, int height);
+   void onResized(int width, int height);
+   void onKeydown(uint64_t key, uint64_t shift, uint64_t alt, uint64_t ctrl);
+   void onKeyup(uint64_t key, uint64_t shift, uint64_t alt, uint64_t ctrl);
+   void onCharKey(uint64_t key, uint64_t shift, uint64_t alt, uint64_t ctrl);
+   void onMouseButtonDown(int x, int y, unsigned button, unsigned shift, unsigned alt, unsigned ctrl);
+   void onMouseButtonUp(int x, int y, unsigned button, unsigned shift, unsigned alt, unsigned ctrl);
+   void onMouseDblClick(int x, int y, unsigned button, unsigned shift, unsigned alt, unsigned ctrl);
+   void onMouseMove(int x, int y, unsigned button, unsigned shift, unsigned alt, unsigned ctrl);
+   void onMouseWheel(int clicks, unsigned button, unsigned shift, unsigned alt, unsigned ctrl);
+   static bool isKeyDown(uint64_t key);
+   bool getCursorPos(int& x, int& y);
+   void setCursorPos(int x, int y);
+   RECT getWindowRect();
+private:
+   void release();
+   void timer(void* param);
+   LRESULT processMessage(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
    static std::atomic<int> refCount_;
    static std::map<HWND, OSAppWindow*> windows_;
    typedef std::map<HWND, OSAppWindow*>::iterator WindowIter_;
@@ -87,6 +90,7 @@ protected:
    std::unique_ptr<std::thread> timerThread_;
    std::atomic<bool> close_;
    std::wstring name_;
+   static std::recursive_mutex windowLock_;
 };
 }
 }
