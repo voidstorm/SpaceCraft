@@ -40,13 +40,13 @@ namespace Vt {
 
       //returns a component by type
       template<typename T>
-      std::weak_ptr<Component> getComponentByType() {
+      std::weak_ptr<T> getComponentByType() {
         for ( const auto &i : mComponents ) {
           auto target = dynamic_cast<std::add_pointer<T>::type>( i.get() );
           if ( target == nullptr ) {
             continue;
           } else {
-            return i;
+            return std::dynamic_pointer_cast<T>(i);
           }
         }
         throw std::exception("SceneObject::getComponentByType: invalid type");
