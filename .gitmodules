@@ -27,3 +27,6 @@
 	path = 3rdparty/protobuf
 	
 	url = https://github.com/voidstorm/protobuf.git
+[submodule "3rdparty/antlr"]
+	path = 3rdparty/antlr
+	url = https://github.com/voidstorm/antlr4.git
