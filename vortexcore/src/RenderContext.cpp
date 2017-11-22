@@ -114,3 +114,4 @@ bool Vt::Gfx::RenderContext::restoreSwapChain() {
 
 void Vt::Gfx::RenderContext::resizeSwapChain(unsigned width, unsigned height) {
 }
+

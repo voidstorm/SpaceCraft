@@ -83,6 +83,7 @@ set(PRIVATE_HEADER_FILES
   include/VortexCore/private/Frustum.h
   include/VortexCore/private/Mesh.h
   include/VortexCore/private/RenderContextVulkan.h
+  include/VortexCore/private/ShaderVulkan.h
   include/VortexCore/private/SwapchainVulkan.h
   include/vortexcore/private/VkErrorHelper.h
 )
@@ -100,6 +101,7 @@ set(SOURCE_FILES
   src/MeshComponent.cpp
   src/RenderContext.cpp
   src/RenderContextVulkan.cpp
+  src/ShaderVulkan.cpp
   src/Scene.cpp
   src/SceneGraph.cpp
   src/SceneManager.cpp
