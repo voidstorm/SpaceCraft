@@ -99,6 +99,9 @@ class RenderContextVulkan {
    friend class std::unique_ptr<RenderContextVulkan>;
    friend struct std::unique_ptr<RenderContextVulkan>::deleter_type;
 
+   RenderContextVulkan(const RenderContextVulkan&) = delete;
+   RenderContextVulkan& operator=(const RenderContextVulkan&) = delete;
+
    //--------------------------------------------------------------------------
    // Ctor, creates a vk instance
    RenderContextVulkan(const Vt::App::AppWindow & window, const RenderContextVulkanSettings &settings);
