@@ -13,16 +13,35 @@
 
 namespace Vt {
 namespace Gfx {
-		class ShaderVulkan final {
-		public:
-         ShaderVulkan(const std::vector<char> &buffer);
-         ShaderVulkan(const std::ifstream& stream);
-         ShaderVulkan(const std::string& filename);
-         VkShaderModule getModule() const;
 
-			~ShaderVulkan();
-      private:
-         std::vector<char> mData;
-		};
-	}
+class RenderContextVulkan;
+class ShaderVulkan final {
+public:
+   //-----------------------------------------------------------------
+   // Loads the shader file into a buffer
+   ShaderVulkan(VkShaderStageFlagBits stage, RenderContextVulkan &ctx);
+   ShaderVulkan(VkShaderStageFlagBits stage, RenderContextVulkan &ctx, const std::vector<char> &buffer);
+   ShaderVulkan(VkShaderStageFlagBits stage, RenderContextVulkan &ctx, std::ifstream& stream);
+   ShaderVulkan(VkShaderStageFlagBits stage, RenderContextVulkan &ctx, const std::string& filename);
+
+   //-----------------------------------------------------------------
+   // Returns shader module
+   VkShaderModule module() const;
+
+   //-----------------------------------------------------------------
+   // Returns the pipeline stage info for attaching the shader to a pipeline
+   VkPipelineShaderStageCreateInfo stage() const;
+
+   ~ShaderVulkan();
+private:
+   //-----------------------------------------------------------------
+   // Creates the shader module
+   void createModule();
+
+   std::vector<char> mData;
+   VkShaderModule mModule{ nullptr };
+   RenderContextVulkan &mCtx;
+   VkShaderStageFlagBits mStage;
+};
+}
 }
