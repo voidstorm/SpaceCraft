@@ -96,6 +96,7 @@ class RenderContextVulkan {
 
    friend class RenderContext;
    friend class SwapchainVulkan;
+   friend class ShaderVulkan;
    friend class std::unique_ptr<RenderContextVulkan>;
    friend struct std::unique_ptr<RenderContextVulkan>::deleter_type;
 
