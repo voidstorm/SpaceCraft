@@ -89,7 +89,7 @@ public:
          case VK_ERROR_OUT_OF_POOL_MEMORY_KHR:
             return "VK_ERROR_OUT_OF_POOL_MEMORY_KHR";
             break;
-         case VK_ERROR_INVALID_EXTERNAL_HANDLE_KHX:
+         case VK_ERROR_INVALID_EXTERNAL_HANDLE_KHR:
             return "VK_ERROR_OUT_OF_POOL_MEMORY_KHR";
             break;
          default:
