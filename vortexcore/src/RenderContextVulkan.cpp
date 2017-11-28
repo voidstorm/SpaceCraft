@@ -4,6 +4,20 @@
 #include "..\include\VortexCore\AppWindow.h"
 #include <algorithm>
 
+//Validation layers
+
+static const char* VK_LAYER_LUNARG_api_dump = "VK_LAYER_LUNARG_api_dump"; 	//utility 	print API calls and their parameters and values
+static const char* VK_LAYER_LUNARG_monitor = "VK_LAYER_LUNARG_monitor"; 	//utility 	outputs the frames - per - second of the target application in the applications title bar
+static const char* VK_LAYER_GOOGLE_unique_objects = "VK_LAYER_GOOGLE_unique_objects";	//utility 	wrap all Vulkan objects in a unique pointer at create time and unwrap them at use time
+static const char* VK_LAYER_LUNARG_core_validation = "VK_LAYER_LUNARG_core_validation";	//validation 	validate the descriptor set, pipeline state, and dynamic state; validate the interfaces between SPIR - V modules and the graphics pipeline; track and validate GPU memory and its binding to objects and command buffers; validate texture formats and render target formats
+static const char* VK_LAYER_LUNARG_object_tracker = "VK_LAYER_LUNARG_object_tracker";	//validation 	track all Vulkan objects and flag invalid objects and object memory leaks
+static const char* VK_LAYER_LUNARG_parameter_validation = "VK_LAYER_LUNARG_parameter_validation"; 	//validation 	validate API parameter values
+static const char* VK_LAYER_LUNARG_screenshot = "VK_LAYER_LUNARG_screenshot"; 	//utility 	//outputs specified frames to an image file as they are presented
+static const char* VK_LAYER_GOOGLE_threading = "VK_LAYER_GOOGLE_threading"; 	//validation 	//check validity of multi - threaded API usage
+static const char* VK_LAYER_LUNARG_device_simulation = "VK_LAYER_LUNARG_device_simulation"; //
+static const char* VK_LAYER_LUNARG_standard_validation = "VK_LAYER_LUNARG_standard_validation"; //
+
+
 std::atomic<unsigned>  Vt::Gfx::RenderContextVulkan::mInstanceCount = 0;
 
 PFN_vkCreateDebugReportCallbackEXT  Vt::Gfx::RenderContextVulkan::CreateDebugReportCallback = VK_NULL_HANDLE;
@@ -71,26 +85,23 @@ VkInstance Vt::Gfx::RenderContextVulkan::vkInstance() {
       instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
       instanceInfo.pNext = NULL;
       instanceInfo.pApplicationInfo = &appInfo;
+      std::vector<const char*> validationLayerNames;
 
       //debugging and validation support
       if (mContextSettings.mValidation == RenderContextVulkanSettings::ValidationFlags::STANDARD) {
-         int32_t  validationLayerCount = 2;
-         const char *validationLayerNames[] = {
-            "VK_LAYER_LUNARG_standard_validation",
-            "VK_LAYER_LUNARG_monitor"
-         };
+          validationLayerNames.push_back(VK_LAYER_LUNARG_standard_validation);
+          validationLayerNames.push_back(VK_LAYER_LUNARG_monitor);
+        
          instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-         instanceInfo.enabledLayerCount = validationLayerCount;
-         instanceInfo.ppEnabledLayerNames = validationLayerNames;
+         instanceInfo.enabledLayerCount = (uint32_t)validationLayerNames.size();
+         instanceInfo.ppEnabledLayerNames = validationLayerNames.data();
       } else if (mContextSettings.mValidation == RenderContextVulkanSettings::ValidationFlags::ALL) {
-         int32_t validationLayerCount = 2;
-         const char *validationLayerNames[] = {
-            "VK_LAYER_LUNARG_standard_validation",
-            "VK_LAYER_LUNARG_monitor"
-         };
+          validationLayerNames.push_back(VK_LAYER_LUNARG_standard_validation);
+          validationLayerNames.push_back(VK_LAYER_LUNARG_monitor);
+
          instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-         instanceInfo.enabledLayerCount = validationLayerCount;
-         instanceInfo.ppEnabledLayerNames = validationLayerNames;
+         instanceInfo.enabledLayerCount = (uint32_t)validationLayerNames.size();
+         instanceInfo.ppEnabledLayerNames = validationLayerNames.data();
       }
 
       if (instanceExtensions.size() > 0) {
