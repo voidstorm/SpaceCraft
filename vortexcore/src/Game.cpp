@@ -127,7 +127,7 @@ std::future<int> Vt::Game::start() {
             mCounter++;
          } else {
             auto ms = (mTiming / double(mCounter));
-            std::cout << "[VT_TIMING]  Vt::Game::tick: " << ms << " milliseconds, " << 1000.0 / ms << "fps" << std::endl;
+            std::cout << "[VT_TIMING]  RenderThread::tick: " << ms << " milliseconds, " << 1000.0 / ms << "fps" << std::endl;
             mCounter = 0;
             mTiming = 0.0;
          }
@@ -147,7 +147,7 @@ std::future<int> Vt::Game::start() {
          //            mCounter++;
          //         } else {
          //            auto ms = (mTiming / double(mCounter));
-         //            std::cout << "[VT_TIMING]  Vt::Game::tick: " << ms << " milliseconds, " << 1000.0 / ms << "fps" << std::endl;
+         //            std::cout << "[VT_TIMING]  GameThread::tick: " << ms << " milliseconds, " << 1000.0 / ms << "fps" << std::endl;
          //            mCounter = 0;
          //            mTiming = 0.0;
          //         }

@@ -35,6 +35,24 @@ namespace Vt {
       //add a component to the object. Note that there can be only one component per type.
       bool addComponent(std::unique_ptr<Component> &&component);
 
+
+      template<class T, class... Args>
+      void AddInterface(Args... args)
+      {
+          m_interfaces.emplace(typeid(T).hash_code(), std::make_unique<T>(args...));
+      }
+
+      template<class T>
+      T * GetInterface()
+      {
+          auto item = m_interfaces.find(typeid(T).hash_code());
+          if (item != m_interfaces.end())
+          {
+              return static_cast<std::add_pointer<T>::type>(item->second.get());
+          }
+          throw std::runtime_error("CoffeeMayaBridge::GetInterface, failed to get interface!");
+      }
+
       //returns a component by name
       std::weak_ptr<Component> getComponentByName(const std::string &name);
 
