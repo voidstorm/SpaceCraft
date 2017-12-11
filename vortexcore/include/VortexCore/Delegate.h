@@ -1,11 +1,16 @@
 #pragma once
-#include <functional>
+#define _SILENCE_CXX17_OLD_ALLOCATOR_MEMBERS_DEPRECATION_WARNING
+#pragma warning( disable : 4996 )
 #include <ppl.h>
 #include <concrt.h>
 #include <concurrent_vector.h>
+
+
+#include <functional>
 #include <list>
 #include <future>
 #include <thread>
+
 
 
 
@@ -34,7 +39,7 @@ namespace Vt {
 
 			std::shared_ptr<std::function < typename R (typename Args...)>> operator+=(std::function<typename R (typename Args...)> fun) {
 				mLock.lock_read ();
-				auto f = std::make_shared < std::function < typename R (typename Args...)>> (fun);
+				auto f = std::make_shared < std::function < R ( Args...)>> (fun);
 				mDelegates.push_back (f);
 				mLock.unlock ();
 				return f;
@@ -68,7 +73,7 @@ namespace Vt {
 				}
 
 			template <typename LTy, typename T = R>
-			typename std::enable_if < std::is_void<R>::value == false && std::is_same<LTy, Async>::value == true, std::list<std::future<typename T>>>::type
+			typename std::enable_if < std::is_void<R>::value == false && std::is_same<LTy, Async>::value == true, std::list<std::future<T>>>::type
 				operator() (Args... args) {
 					return this->invoke<LTy, T> (args...);
 				}
@@ -110,7 +115,7 @@ namespace Vt {
 				}
 
 			template <typename LTy, typename T = R>
-			typename std::enable_if < std::is_void<R>::value == false && std::is_same<LTy, Async>::value == true, std::list < std::future<typename T >> >::type
+			typename std::enable_if < std::is_void<R>::value == false && std::is_same<LTy, Async>::value == true, std::list < std::future<T>> >::type
 				invoke (Args... args) {
 					mLock.lock_read ();
 					std::list<std::future<T>> r;
