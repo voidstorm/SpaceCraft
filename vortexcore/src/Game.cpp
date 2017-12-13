@@ -1,10 +1,12 @@
 #include "VortexCore\Game.h"
 #include "VortexCore\SceneManager.h"
 #include "VortexCore\RenderContext.h"
-#include "VortexCore\AppWindow.h"
-#include "VortexCore\ThreadMap.h"
+#include "VortexCore/AppWindow.h"
+#include "VortexCore/ThreadMap.h"
 #include "VortexCore/ThreadContext.h"
 #include "VortexCore/ScopedWaitTimer.h"
+#include "VortexCore/SystemLogger.h"
+
 
 #include <chrono>
 #include <thread>
@@ -22,8 +24,11 @@ Vt::Game::Game(std::unique_ptr<Vt::Gfx::RenderContext> &&render_context) :
       window->setSize(mRenderContext->layout().width, mRenderContext->layout().height);
 
       window->OnCreate += [this]()->void {
-
-         //Init render context
+          SYSTEM_LOG_INFO("-------------------------------------------------------");
+          SYSTEM_LOG_INFO("Schnarzmaschine, version %s", SCHNARZ_VERSION);
+          SYSTEM_LOG_INFO("-------------------------------------------------------");
+          SYSTEM_LOG_INFO("Booting...");
+          //Init render context
          try {
             mRenderContext->init();
          } catch (const std::exception& e) {

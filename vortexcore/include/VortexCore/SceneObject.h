@@ -37,9 +37,9 @@ namespace Vt {
 
 
       //template<class T, class... Args>
-      //void AddInterface(Args... args)
+      //void AddInterface(Args&&... args)
       //{
-      //    m_interfaces.emplace(typeid(T).hash_code(), std::make_unique<T>(args...));
+      //    m_interfaces.emplace(typeid(T).hash_code(), std::make_unique<T>(std::forward<Args>(args)...));
       //}
 
       //template<class T>

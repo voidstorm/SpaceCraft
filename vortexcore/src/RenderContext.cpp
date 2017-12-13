@@ -26,6 +26,7 @@ void Vt::Gfx::RenderContext::init() {
       settings.mValidation = RenderContextVulkanSettings::ValidationFlags::NONE;
 #endif
       try {
+          SYSTEM_LOG_INFO("Init Render Context Vulkan...");
          //first we create a vulkan instance
          mVkContext = std::unique_ptr<RenderContextVulkan>(new RenderContextVulkan(*(mWindow.get()), settings));
          if (mVkContext) {
@@ -68,6 +69,7 @@ void Vt::Gfx::RenderContext::init() {
             }
             //once we have a device we need to create command pools
 
+            SYSTEM_LOG_INFO("Init Render Context Done...");
          }
       } catch (const std::exception& e) {
          VT_EXCEPT_RT(RenderContextException, "RenderContext::init: Could not init render context!", e);

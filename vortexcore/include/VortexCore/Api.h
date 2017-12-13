@@ -1,6 +1,8 @@
 #pragma once
 #include <stdexcept>
 
+#define SCHNARZ_VERSION "0.1.1.1" //major, minor, patch, build
+
 #define LOGGING_ON
 
 
