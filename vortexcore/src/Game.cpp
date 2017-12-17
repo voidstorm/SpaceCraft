@@ -14,6 +14,10 @@
 
 #include <windows.h>
 
+namespace Vt {
+   ThreadMapping_t ThreadMapping{};
+}
+
 //if we dont have an ini file, create a default window
 Vt::Game::Game(std::unique_ptr<Vt::Gfx::RenderContext> &&render_context) :
    mRenderContext(std::move(render_context)) {
@@ -36,7 +40,7 @@ Vt::Game::Game(std::unique_ptr<Vt::Gfx::RenderContext> &&render_context) :
             VT_EXCEPT_RT(GameException, "Game:::Game Could not init render context!", e);
          }
          //Create scene manager
-         mSceneManager = std::make_unique<Vt::Scene::SceneManager>(this->renderContext());
+         mSceneManager = std::make_unique<Vt::Scene::SceneManager>(this->renderContext(), *this);
          this->mRunning.store(true, std::memory_order::memory_order_release);
       };
 
@@ -81,6 +85,9 @@ Vt::Scene::SceneManager & Vt::Game::sceneManager() {
 //-----------------------------------------------------------------
 //
 int Vt::Game::shutdown() {
+   //unload resources
+   mSceneManager->_unloadResources();
+
    mGameThread->RequestExit();
    mGameThread.reset();
    mRenderThread->RequestExit();
@@ -97,7 +104,7 @@ int Vt::Game::shutdown() {
 void Vt::Game::tick(const std::chrono::high_resolution_clock::duration & delta) {
    auto activeScenes = mSceneManager->activeScenes();
    for (auto & scene : activeScenes) {
-      scene->tick(delta);
+      scene->_tick(delta);
    }
 }
 
@@ -106,7 +113,7 @@ void Vt::Game::tick(const std::chrono::high_resolution_clock::duration & delta) 
 void Vt::Game::draw(const std::chrono::high_resolution_clock::duration & delta) {
    auto visibleScenes = mSceneManager->visibleScenes();
    for (auto & scene : visibleScenes) {
-      scene->draw(delta);
+      scene->_draw(delta);
    }
 }
 
@@ -127,7 +134,7 @@ std::future<int> Vt::Game::start() {
          draw(mRenderThread->GetDuration());
 
 #ifdef VT_TIMING
-         if (mTiming < 1000) {
+         if (mTiming < 1000 && mTiming >= 0) {
             mTiming += (double)std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1, 1000>>>(mRenderThread->GetDuration()).count();
             mCounter++;
          } else {
@@ -146,17 +153,17 @@ std::future<int> Vt::Game::start() {
       mGameThread = std::make_unique<Vt::ThreadContext>(Vt::ThreadMapping.TM_GAME_LOOP, false);
       mGameThread->OnBeginAlways += [&, this](void)->void {
          tick(mGameThread->GetDuration());
-         //#ifdef VT_TIMING
-         //         if (mTiming < 1000) {
-         //            mTiming += (double)std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1, 1000>>>(mGameThread->GetDuration()).count();
-         //            mCounter++;
-         //         } else {
-         //            auto ms = (mTiming / double(mCounter));
-         //            std::cout << "[VT_TIMING]  GameThread::tick: " << ms << " milliseconds, " << 1000.0 / ms << "fps" << std::endl;
-         //            mCounter = 0;
-         //            mTiming = 0.0;
-         //         }
-         //#endif
+         #ifdef VT_TIMING
+                  if (mTiming < 1000 && mTiming >= 0) {
+                     mTiming += (double)std::chrono::duration_cast<std::chrono::duration<double, std::ratio<1, 1000>>>(mGameThread->GetDuration()).count();
+                     mCounter++;
+                  } else {
+                     auto ms = (mTiming / double(mCounter));
+                     std::cout << "[VT_TIMING]  GameThread::tick: " << ms << " milliseconds, " << 1000.0 / ms << "fps" << std::endl;
+                     mCounter = 0;
+                     mTiming = 0.0;
+                  }
+         #endif
       };
 
       return 0;

@@ -122,7 +122,8 @@ endif()
 
 
 set(TEST_FILES
-
+  include/VortexCore/test/VkTriangle.h
+  include/VortexCore/test/VkTriangle.cpp
 )
 
 
@@ -134,6 +135,7 @@ set(SHADER_FILES_DEFAULT
 )
 
  source_group("shader"           FILES ${SHADER_FILES_DEFAULT})
+ source_group("test"           FILES ${TEST_FILES})
 
 
 set(ALL_SOURCE_FILES

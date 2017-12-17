@@ -25,6 +25,8 @@ include_directories (
 
 set (SOURCE_FILES
   ./src/SpaceCraft.cpp
+  ./src/SceneTest.cpp
+  ./src/SceneTest.h
 )
 
 set (PRIVATE_HEADER_FILES

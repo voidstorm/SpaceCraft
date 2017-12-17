@@ -3,6 +3,7 @@
 namespace Vt {
 class ThreadContext;
 class CommandQueue;
+class Game;
 
 namespace App {
 class AppWindow;
@@ -14,6 +15,8 @@ class OSAppWindow;
 namespace Gfx {
 class RenderContext;
 }
+
+
 
 namespace Scene {
 class SceneManager;

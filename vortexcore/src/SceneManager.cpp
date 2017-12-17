@@ -2,11 +2,13 @@
 #include "..\include\VortexCore\RenderContext.h"
 #include "..\include\VortexCore\SceneGraph.h"
 #include "..\include\VortexCore\Scene.h"
+#include "..\include\VortexCore\Game.h"
 
 
 //--------------------------------------------------------------------------
-Vt::Scene::SceneManager::SceneManager(Vt::Gfx::RenderContext &render_context):
+Vt::Scene::SceneManager::SceneManager(Vt::Gfx::RenderContext &render_context, Vt::Game &game):
     mRenderContext(render_context)
+   ,mGame(game)
 {
 }
 
@@ -20,8 +22,8 @@ Vt::Gfx::RenderContext & Vt::Scene::SceneManager::renderContext() const{
 }
 
 //--------------------------------------------------------------------------
-void Vt::Scene::SceneManager::addScene(std::unique_ptr<Vt::Scene::Scene>&& scene) {
-    mScenes.emplace(scene->name(), std::move(scene));
+Vt::Scene::Scene & Vt::Scene::SceneManager::addScene(std::unique_ptr<Vt::Scene::Scene>&& scene) {
+    return *(mScenes.emplace(scene->name(), std::move(scene)).first->second);
 }
 
 //--------------------------------------------------------------------------
@@ -35,7 +37,12 @@ Vt::Scene::Scene & Vt::Scene::SceneManager::findSceneByName(const std::string & 
 
 //--------------------------------------------------------------------------
 void Vt::Scene::SceneManager::loadResources() {
-   _loadResources();
+
+}
+
+//--------------------------------------------------------------------------
+void Vt::Scene::SceneManager::unloadResources() {
+
 }
 
 //--------------------------------------------------------------------------
@@ -47,7 +54,7 @@ Vt::Scene::SceneGraph & Vt::Scene::SceneManager::sceneGraph() {
 std::vector<Vt::Scene::Scene*> Vt::Scene::SceneManager::activeScenes() {
    std::vector<Vt::Scene::Scene*> scenes;
    {
-      std::lock_guard<decltype(m_act_lock)> l(m_act_lock);
+      //std::lock_guard<decltype(m_act_lock)> l(m_act_lock);
       scenes = mActiveScenes;
    }
    return std::move(scenes);
@@ -57,11 +64,23 @@ std::vector<Vt::Scene::Scene*> Vt::Scene::SceneManager::activeScenes() {
 std::vector<Vt::Scene::Scene*> Vt::Scene::SceneManager::visibleScenes() {
    std::vector<Vt::Scene::Scene*> scenes;
    {
-      std::lock_guard<decltype(m_vis_lock)> l(m_vis_lock);
+      //std::lock_guard<decltype(m_vis_lock)> l(m_vis_lock);
       scenes = mVisibleScenes;
    }
    return std::move(scenes);
 }
 
+Vt::Game & Vt::Scene::SceneManager::game() {
+   return mGame;
+}
+
 void Vt::Scene::SceneManager::_loadResources() {
+   loadResources();
+}
+
+void Vt::Scene::SceneManager::_unloadResources() {
+   for (auto & scene : mScenes) {
+      scene.second->_unload();
+   }
+   unloadResources();
 }

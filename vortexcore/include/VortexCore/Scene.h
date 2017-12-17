@@ -13,8 +13,9 @@ namespace Vt {
 namespace Scene {
 class VORTEX_API Scene {
    friend class Game;
+   friend class SceneManager;
 public:
-   Scene(SceneManager& sceneManager);
+   Scene(const std::string &name, SceneManager& sceneManager);
    virtual ~Scene();
    virtual const std::string & name() const;
    virtual Vt::Scene::TransformCache & transformCache();
@@ -49,6 +50,13 @@ protected:
 private:
    void _load();
    void _unload();
+   void _draw(const std::chrono::high_resolution_clock::duration &delta);
+   void _tick(const std::chrono::high_resolution_clock::duration &delta);
+
+   void _beginPlay();
+   void _endPlay();
+   void _beginDraw();
+   void _endDraw();
 
    std::unique_ptr<TransformCache> mTransformCache;
    std::string mName;
@@ -56,6 +64,7 @@ private:
    Vt::Gfx::RenderContext &mRenderContext;
    bool mActive{ false };
    bool mVisible{ false };
+
 };
 }
 }

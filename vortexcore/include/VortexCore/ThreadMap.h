@@ -23,7 +23,9 @@ struct ThreadMapping_t {
    unsigned long long  TM_GAME_LOOP = 1;
    unsigned long long  TM_RENDER_LOOP = 2;
 
-} ThreadMapping;
+};
+
+extern ThreadMapping_t ThreadMapping;
 
 inline void SetThreadMapping(const unsigned long long mapping) {
    SetThreadIdealProcessor(GetCurrentThread(), (DWORD)mapping);
