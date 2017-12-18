@@ -16,19 +16,19 @@ void Sc::SceneTest::load() {
 void Sc::SceneTest::unload() {
 }
 
-void Sc::SceneTest::beginPlay() {
+void Sc::SceneTest::onActivate() {
 }
 
-void Sc::SceneTest::endPlay() {
+void Sc::SceneTest::onDeactivate() {
 }
 
-void Sc::SceneTest::beginDraw() {
+void Sc::SceneTest::onShow() {
 }
 
 void Sc::SceneTest::draw(const std::chrono::high_resolution_clock::duration & delta) {
 }
 
-void Sc::SceneTest::endDraw() {
+void Sc::SceneTest::onHide() {
 }
 
 void Sc::SceneTest::tick(const std::chrono::high_resolution_clock::duration & delta) {

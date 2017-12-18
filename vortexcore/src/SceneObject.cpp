@@ -100,7 +100,7 @@ void Vt::Scene::SceneObject::activate() {
 void Vt::Scene::SceneObject::deactivate() {
   if ( !mActive )
     return;
-  onDeactivate();
+  _onDeactivate();
   OnDeactivate(*this);
   for ( auto &c : mComponents ) {
     c->onDeactivate();
@@ -135,7 +135,7 @@ void Vt::Scene::SceneObject::onTick(const std::chrono::high_resolution_clock::du
 }
 
 //-------------------------------------------------------------------------------------------------
-void Vt::Scene::SceneObject::_beginPlay() {
+void Vt::Scene::SceneObject::_onActivate() {
   if ( !mActive )
     return;
   onBeginPlay();
@@ -146,7 +146,7 @@ void Vt::Scene::SceneObject::_beginPlay() {
 }
 
 //-------------------------------------------------------------------------------------------------
-void Vt::Scene::SceneObject::_endPlay() {
+void Vt::Scene::SceneObject::_onDeactivate() {
   if ( !mActive )
     return;
   onEndPlay();

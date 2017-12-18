@@ -104,8 +104,8 @@ namespace Vt {
       virtual void onTick(const std::chrono::high_resolution_clock::duration &delta);
 
     private:
-      void _beginPlay();
-      void _endPlay();
+      void _onActivate();
+      void _onDeactivate();
       void _tick(const std::chrono::high_resolution_clock::duration &delta);
 
     protected:

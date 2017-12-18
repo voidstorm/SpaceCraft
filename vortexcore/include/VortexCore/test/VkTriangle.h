@@ -22,15 +22,15 @@ public:
 
 protected:
    //called after level load
-   virtual void beginPlay() override;
+   virtual void onActivate() override;
    //called before level unload
-   virtual void endPlay() override;
+   virtual void onDeactivate() override;
    //called before drawing the scene
-   virtual void beginDraw() override;
+   virtual void onShow() override;
    //draws the scene
    virtual void draw(const std::chrono::high_resolution_clock::duration &delta) override;
    //called when drawing is finished
-   virtual void endDraw() override;
+   virtual void onHide() override;
    //logic/world tick
    virtual void tick(const std::chrono::high_resolution_clock::duration &delta) override;
 

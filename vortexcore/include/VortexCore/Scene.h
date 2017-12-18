@@ -19,8 +19,6 @@ public:
    virtual ~Scene();
    virtual const std::string & name() const;
    virtual Vt::Scene::TransformCache & transformCache();
-   virtual void load();
-   virtual void unload();
    virtual std::future<void> loadAsync();
    virtual std::future<void> unloadAsync();
    virtual float loadProgress();
@@ -30,20 +28,27 @@ public:
    virtual void show();
    virtual void hide();
    virtual bool visible();
+   virtual bool loaded();
    SceneManager& sceneManager() const;
    Vt::Gfx::RenderContext& renderContext() const;
 
 protected:
+   virtual void load();
+   virtual void unload();
    //called after level load
-   virtual void beginPlay();
+   virtual void onLoaded();
    //called before level unload
-   virtual void endPlay();
+   virtual void onUnload();
+   //called after level load
+   virtual void onActivate();
+   //called before level unload
+   virtual void onDeactivate();
    //called before drawing the scene
-   virtual void beginDraw();
+   virtual void onShow();
    //draws the scene
    virtual void draw(const std::chrono::high_resolution_clock::duration &delta);
    //called when drawing is finished
-   virtual void endDraw();
+   virtual void onHide();
    //logic/world tick
    virtual void tick(const std::chrono::high_resolution_clock::duration &delta);
 
@@ -53,10 +58,12 @@ private:
    void _draw(const std::chrono::high_resolution_clock::duration &delta);
    void _tick(const std::chrono::high_resolution_clock::duration &delta);
 
-   void _beginPlay();
-   void _endPlay();
-   void _beginDraw();
-   void _endDraw();
+   void _onLoaded();
+   void _onUnload();
+   void _onActivate();
+   void _onDeactivate();
+   void _onShow();
+   void _onHide();
 
    std::unique_ptr<TransformCache> mTransformCache;
    std::string mName;
@@ -64,6 +71,7 @@ private:
    Vt::Gfx::RenderContext &mRenderContext;
    bool mActive{ false };
    bool mVisible{ false };
+   std::atomic_bool mLoaded{ false };
 
 };
 }

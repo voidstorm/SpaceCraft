@@ -64,7 +64,7 @@ void loadTestScenes(Vt::Game& game) {
    //scene test
    auto &testscene= sceneManager.addScene(std::make_unique<Sc::SceneTest>(sceneManager));
    //load
-   testscene.load();
+   testscene.loadAsync().get();
    //activate
    testscene.activate();
    testscene.show();
