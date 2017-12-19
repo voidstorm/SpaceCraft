@@ -64,12 +64,6 @@ std::future<void> Vt::Scene::Scene::unloadAsync() {
 
 //--------------------------------------------------------------------------
 //
-float Vt::Scene::Scene::loadProgress() {
-   return 0.0f;
-}
-
-//--------------------------------------------------------------------------
-//
 void Vt::Scene::Scene::activate() {
    mSceneManager.game().gameThread().GetCommandQueue().Submit([&, this](void*)->Vt::CommandQueue::CMD_RET_TYPE {
       _onActivate();
@@ -118,7 +112,7 @@ bool Vt::Scene::Scene::visible() {
 }
 
 bool Vt::Scene::Scene::loaded() {
-   return mLoaded.load(std::memory_order::memory_order_acquire);;
+   return mLoaded.load(std::memory_order_acquire);;
 }
 
 //--------------------------------------------------------------------------
@@ -169,12 +163,13 @@ void Vt::Scene::Scene::onHide() {
 void Vt::Scene::Scene::tick(const std::chrono::high_resolution_clock::duration & delta) {
 }
 
+
 //--------------------------------------------------------------------------
 //
 void Vt::Scene::Scene::_load() {
    SYSTEM_LOG_INFO("Scene::_load: %s", mName.c_str());
    load();
-   mLoaded.store(true, std::memory_order::memory_order_release);
+   mLoaded.store(true, std::memory_order_release);
    mSceneManager.game().gameThread().GetCommandQueue().Submit([&, this](void*)->Vt::CommandQueue::CMD_RET_TYPE {
       _onLoaded();
       return 0;

@@ -21,7 +21,6 @@ public:
    virtual Vt::Scene::TransformCache & transformCache();
    virtual std::future<void> loadAsync();
    virtual std::future<void> unloadAsync();
-   virtual float loadProgress();
    virtual void activate();
    virtual bool active() const;
    virtual void deactivate();
@@ -72,7 +71,6 @@ private:
    bool mActive{ false };
    bool mVisible{ false };
    std::atomic_bool mLoaded{ false };
-
 };
 }
 }
