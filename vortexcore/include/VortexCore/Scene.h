@@ -1,6 +1,7 @@
 #pragma once
 #include "Api.h"
 #include "ForwardDecls.h"
+#include "Aggregate.h"
 #include <string>
 #include <memory>
 #include <chrono>
@@ -11,7 +12,7 @@
 
 namespace Vt {
 namespace Scene {
-class VORTEX_API Scene {
+class VORTEX_API Scene : public Vt::Aggregate {
    friend class Game;
    friend class SceneManager;
 public:

@@ -51,6 +51,7 @@ include_directories (
 
 set(PUBLIC_HEADER_FILES
   include/VortexCore/Api.h
+  include/VortexCore/Aggregate.h
   include/VortexCore/AlignedStorage.h
   include/VortexCore/AppWindow.h
   include/VortexCore/CameraComponent.h
@@ -76,6 +77,8 @@ set(PUBLIC_HEADER_FILES
   include/VortexCore/Transform.h
   include/VortexCore/TransformCache.h
   include/VortexCore/VortexCore.h
+  include/VortexCore/Interface.h
+  include/VortexCore/QueryProgress.h
 )
 
 set(PRIVATE_HEADER_FILES

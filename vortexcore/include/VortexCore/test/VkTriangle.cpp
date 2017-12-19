@@ -9,6 +9,7 @@ Vt::Test::VkTriangle::~VkTriangle() {
 }
 
 void Vt::Test::VkTriangle::load() {
+   Vt::Scene::Scene::load();
 }
 
 void Vt::Test::VkTriangle::unload() {

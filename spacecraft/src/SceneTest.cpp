@@ -11,6 +11,7 @@ Sc::SceneTest::~SceneTest() {
 }
 
 void Sc::SceneTest::load() {
+   Vt::Scene::Scene::load();
 }
 
 void Sc::SceneTest::unload() {

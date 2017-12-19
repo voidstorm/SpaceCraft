@@ -4,6 +4,7 @@
 #include "..\include\VortexCore\Game.h"
 #include "..\include\VortexCore\ThreadContext.h"
 #include "..\include\VortexCore\SystemLogger.h"
+#include "..\include\VortexCore\QueryProgress.h"
 
 
 //--------------------------------------------------------------------------
@@ -13,6 +14,10 @@ Vt::Scene::Scene::Scene(const std::string &name, SceneManager& sceneManager)
    , mSceneManager(sceneManager)
    , mRenderContext(sceneManager.renderContext())
    , mName(name) {
+   //we want progress reporting
+   createInterface<Vt::QueryProgress>();
+
+
 }
 
 
