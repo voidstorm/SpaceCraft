@@ -50,3 +50,12 @@ private:
    std::unordered_map<size_t, std::shared_ptr<Vt::Interface>> mInterfaces;
 };
 }
+
+__forceinline std::unordered_map<size_t, std::shared_ptr<Vt::Interface>>::iterator begin(Vt::Aggregate &interfaces) {
+   return interfaces.begin();
+}
+
+__forceinline std::unordered_map<size_t, std::shared_ptr<Vt::Interface>>::iterator end(Vt::Aggregate &interfaces) {
+   return interfaces.end();
+}
+

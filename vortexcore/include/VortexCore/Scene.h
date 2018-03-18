@@ -2,6 +2,7 @@
 #include "Api.h"
 #include "ForwardDecls.h"
 #include "Aggregate.h"
+#include "ComponentContainer.h"
 #include <string>
 #include <memory>
 #include <chrono>

@@ -7,12 +7,14 @@
 #include <vector>
 #include <type_traits>
 #include <chrono>
+#include "Aggregate.h"
+#include "ComponentContainer.h"
 #include "ForwardDecls.h"
 
 namespace Vt {
   namespace Scene {
     //Scene objects can tick
-    class VORTEX_API SceneObject : public std::enable_shared_from_this<SceneObject> {
+    class VORTEX_API SceneObject : public Vt::Scene::ComponentContainer, public std::enable_shared_from_this<SceneObject> {
     public:
       SceneObject(Scene &scene, const bool is_static= false, const std::string& name = "SceneObject");
       virtual ~SceneObject();
@@ -30,44 +32,6 @@ namespace Vt {
       //sets a new transform
       inline void setTransform(const Transform& transform) {
         mTransform = transform;
-      }
-
-      //add a component to the object. Note that there can be only one component per type.
-      bool addComponent(std::unique_ptr<Component> &&component);
-
-
-      //template<class T, class... Args>
-      //void AddInterface(Args&&... args)
-      //{
-      //    m_interfaces.emplace(typeid(T).hash_code(), std::make_unique<T>(std::forward<Args>(args)...));
-      //}
-
-      //template<class T>
-      //T * GetInterface()
-      //{
-      //    auto item = m_interfaces.find(typeid(T).hash_code());
-      //    if (item != m_interfaces.end())
-      //    {
-      //        return static_cast<std::add_pointer<T>::type>(item->second.get());
-      //    }
-      //    throw std::runtime_error("CoffeeMayaBridge::GetInterface, failed to get interface!");
-      //}
-
-      //returns a component by name
-      std::weak_ptr<Component> getComponentByName(const std::string &name);
-
-      //returns a component by type
-      template<typename T>
-      std::weak_ptr<T> getComponentByType() {
-        for ( const auto &i : mComponents ) {
-          auto target = dynamic_cast<std::add_pointer<T>::type>( i.get() );
-          if ( target == nullptr ) {
-            continue;
-          } else {
-            return std::dynamic_pointer_cast<T>(i);
-          }
-        }
-        throw std::exception("SceneObject::getComponentByType: invalid type");
       }
 
       virtual void activate();
@@ -118,7 +82,6 @@ namespace Vt {
 
     private:
       Transform &mTransform;
-      std::vector<std::shared_ptr<Component>> mComponents;
     };
   }
 }

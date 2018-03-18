@@ -57,6 +57,7 @@ set(PUBLIC_HEADER_FILES
   include/VortexCore/CameraComponent.h
   include/VortexCore/CommandQueue.h
   include/VortexCore/Component.h
+  include/VortexCore/ComponentContainer.h
   include/VortexCore/Delegate.h
   include/VortexCore/Game.h
   include/VortexCore/ForwardDecls.h
