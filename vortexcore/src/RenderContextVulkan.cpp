@@ -90,14 +90,14 @@ VkInstance Vt::Gfx::RenderContextVulkan::vkInstance() {
       //debugging and validation support
       if (mContextSettings.mValidation == RenderContextVulkanSettings::ValidationFlags::STANDARD) {
           validationLayerNames.push_back(VK_LAYER_LUNARG_standard_validation);
-          validationLayerNames.push_back(VK_LAYER_LUNARG_monitor);
+          //validationLayerNames.push_back(VK_LAYER_LUNARG_monitor);
         
          instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
          instanceInfo.enabledLayerCount = (uint32_t)validationLayerNames.size();
          instanceInfo.ppEnabledLayerNames = validationLayerNames.data();
       } else if (mContextSettings.mValidation == RenderContextVulkanSettings::ValidationFlags::ALL) {
           validationLayerNames.push_back(VK_LAYER_LUNARG_standard_validation);
-          validationLayerNames.push_back(VK_LAYER_LUNARG_monitor);
+          //validationLayerNames.push_back(VK_LAYER_LUNARG_monitor);
 
          instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
          instanceInfo.enabledLayerCount = (uint32_t)validationLayerNames.size();
