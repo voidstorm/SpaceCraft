@@ -82,6 +82,8 @@ namespace Vt {
 
     private:
       Transform &mTransform;
+      std::weak_ptr<SceneObject> mParent;
+      std::vector<std::shared_ptr<SceneObject>> mChildren;
     };
   }
 }

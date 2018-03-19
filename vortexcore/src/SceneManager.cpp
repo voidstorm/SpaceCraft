@@ -74,6 +74,10 @@ Vt::Game & Vt::Scene::SceneManager::game() {
    return mGame;
 }
 
+void Vt::Scene::SceneManager::setSceneGraph(const std::shared_ptr<Vt::Scene::SceneGraph>& scenegraph) {
+   mSceneGraph = scenegraph;
+}
+
 void Vt::Scene::SceneManager::_loadResources() {
    loadResources();
 }

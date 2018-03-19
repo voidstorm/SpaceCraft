@@ -38,6 +38,8 @@ public:
    virtual std::vector<Vt::Scene::Scene*> visibleScenes();
    //return current game
    virtual Vt::Game &game();
+   //sets the current scene graph
+   virtual void setSceneGraph(const std::shared_ptr<Vt::Scene::SceneGraph>& scenegraph);
 private:
    void _loadResources();
    void _unloadResources();
@@ -45,7 +47,7 @@ private:
 private:
    Vt::Game &mGame;
    Vt::Gfx::RenderContext &mRenderContext;
-   std::unique_ptr<Vt::Scene::SceneGraph> mSceneGraph;
+   std::shared_ptr<Vt::Scene::SceneGraph> mSceneGraph;
    std::unordered_map<std::string, std::unique_ptr<Vt::Scene::Scene>> mScenes;
    std::vector<Vt::Scene::Scene*> mActiveScenes;
    std::vector<Vt::Scene::Scene*> mVisibleScenes;

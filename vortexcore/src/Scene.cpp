@@ -17,7 +17,6 @@ Vt::Scene::Scene::Scene(const std::string &name, SceneManager& sceneManager)
    //we want progress reporting
    createInterface<Vt::QueryProgress>();
 
-
 }
 
 
@@ -203,10 +202,12 @@ void Vt::Scene::Scene::_unload() {
 
 void Vt::Scene::Scene::_draw(const std::chrono::high_resolution_clock::duration & delta) {
    draw(delta);
+   //look for scene node in graph and draw all objects
 }
 
 void Vt::Scene::Scene::_tick(const std::chrono::high_resolution_clock::duration & delta) {
    tick(delta);
+   //look for scene node in graph and tick all objects
 }
 
 void Vt::Scene::Scene::_onLoaded() {

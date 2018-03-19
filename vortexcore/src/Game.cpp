@@ -126,7 +126,7 @@ std::future<int> Vt::Game::start() {
          std::this_thread::yield();
       }
       //load init resources
-      mSceneManager->loadResources();
+      mSceneManager->_loadResources();
 
       //render thread
       mRenderThread = std::make_unique<Vt::ThreadContext>(Vt::ThreadMapping.TM_RENDER_LOOP, false);
