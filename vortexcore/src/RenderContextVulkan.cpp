@@ -565,7 +565,7 @@ void Vt::Gfx::RenderContextVulkan::logAdapterProperties(const VkPhysicalDevicePr
    for (unsigned i = 0; i < memoryInfo.memoryHeapCount; ++i) {
       SYSTEM_LOG_INFO("size: %u MB", (unsigned)(memoryInfo.memoryHeaps[i].size / (1024LL * 1024LL)));
       SYSTEM_LOG_INFO("VK_MEMORY_HEAP_DEVICE_LOCAL_BIT: %s", memoryInfo.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT ? "YES" : "NO");
-      SYSTEM_LOG_INFO("VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHX: %s", memoryInfo.memoryHeaps[i].flags & VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHX ? "YES" : "NO");
+      SYSTEM_LOG_INFO("VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHR: %s", memoryInfo.memoryHeaps[i].flags & VK_MEMORY_HEAP_MULTI_INSTANCE_BIT_KHR ? "YES" : "NO");
    }
 
    SYSTEM_LOG_INFO("--------------------------------------------");
