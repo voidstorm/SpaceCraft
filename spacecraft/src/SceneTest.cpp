@@ -1,6 +1,10 @@
 #include "SceneTest.h"
 //Testscene
 #include "VortexCore/test/VkTriangle.h"
+#include "VortexCore/SceneObject.h"
+#include "VortexCore/SceneGraph.h"
+#include "VortexCore/Component.h"
+
 
 Sc::SceneTest::SceneTest(Vt::Scene::SceneManager & sceneManager) 
    :
@@ -11,10 +15,11 @@ Sc::SceneTest::~SceneTest() {
 }
 
 void Sc::SceneTest::load() {
-   Vt::Scene::Scene::load();
+   _load();
 }
 
 void Sc::SceneTest::unload() {
+   _unload();
 }
 
 void Sc::SceneTest::onActivate() {
@@ -36,6 +41,10 @@ void Sc::SceneTest::tick(const std::chrono::high_resolution_clock::duration & de
 }
 
 void Sc::SceneTest::_load() {
+   //add some game objects to the scene
+   sceneGraph().addSceneObject(std::make_shared<Vt::Scene::SceneObject>(*this, false, "Obj1"), sceneGraph().root());
+   sceneGraph().addSceneObject(std::make_shared<Vt::Scene::SceneObject>(*this, false, "Obj2"), sceneGraph().root());
+   sceneGraph().addSceneObject(std::make_shared<Vt::Scene::SceneObject>(*this, false, "Obj3"), sceneGraph().root());
 }
 
 void Sc::SceneTest::_unload() {

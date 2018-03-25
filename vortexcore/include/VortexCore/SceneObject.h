@@ -16,6 +16,7 @@ namespace Vt {
     //Scene objects can tick
     class VORTEX_API SceneObject : public Vt::Scene::ComponentContainer, public std::enable_shared_from_this<SceneObject> {
     public:
+       friend class Vt::Scene::SceneGraph;
       SceneObject(Scene &scene, const bool is_static= false, const std::string& name = "SceneObject");
       virtual ~SceneObject();
 
@@ -55,8 +56,14 @@ namespace Vt {
       Vt::Delegate<void, SceneObject&> OnShow;
       Vt::Delegate<void, SceneObject&> OnHide;
       Vt::Delegate<void, SceneObject&, const std::chrono::high_resolution_clock::duration&> OnTick;
+      Vt::Delegate<void, SceneObject&, const std::chrono::high_resolution_clock::duration&> OnDraw;
 
     protected:
+       void addChild(const std::shared_ptr<SceneObject> &child);
+       void addChildren(const std::vector<std::shared_ptr<SceneObject>> &children);
+       std::vector<std::shared_ptr<SceneObject>> &children();
+
+
       //Overridable callbacks
       virtual void onActivate();
       virtual void onDeactivate();
@@ -66,11 +73,13 @@ namespace Vt {
       virtual void onBeginPlay();
       virtual void onEndPlay();
       virtual void onTick(const std::chrono::high_resolution_clock::duration &delta);
+      virtual void onDraw(const std::chrono::high_resolution_clock::duration &delta);
 
     private:
       void _onActivate();
       void _onDeactivate();
       void _tick(const std::chrono::high_resolution_clock::duration &delta);
+      void _draw(const std::chrono::high_resolution_clock::duration &delta);
 
     protected:
       bool mActive = true;

@@ -1,5 +1,7 @@
 // SpaceCraft.cpp : Defines the entry point for the console application.
 //
+#define GAME_LOGGING_ON
+
 #include "VortexCore\AppWindow.h"
 #include "VortexCore\Game.h"
 #include "VortexCore\SceneManager.h"
@@ -60,6 +62,7 @@ int main(int argc, char** argv) {
 }
 
 void loadTestScenes(Vt::Game& game) {
+   GAME_LOG_INFO("Loading testcene...");
    auto& sceneManager = game.sceneManager();
    //scene test
    auto &testscene= sceneManager.addScene(std::make_unique<Sc::SceneTest>(sceneManager));

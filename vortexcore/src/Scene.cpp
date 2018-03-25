@@ -5,7 +5,8 @@
 #include "..\include\VortexCore\ThreadContext.h"
 #include "..\include\VortexCore\SystemLogger.h"
 #include "..\include\VortexCore\QueryProgress.h"
-
+#include "..\include\VortexCore\SceneGraph.h"
+#include "..\include\VortexCore\SceneObject.h"
 
 //--------------------------------------------------------------------------
 //
@@ -16,7 +17,8 @@ Vt::Scene::Scene::Scene(const std::string &name, SceneManager& sceneManager)
    , mName(name) {
    //we want progress reporting
    createInterface<Vt::QueryProgress>();
-
+   //create a standard scene graph
+   mSceneGraph = std::make_shared<Vt::Scene::SceneGraph>(std::make_shared<Vt::Scene::SceneObject>(*this, false, "root"));
 }
 
 
@@ -131,6 +133,16 @@ Vt::Gfx::RenderContext & Vt::Scene::Scene::renderContext() const {
    return mRenderContext;
 }
 
+
+void Vt::Scene::Scene::setSceneGraph(const std::shared_ptr<Vt::Scene::SceneGraph>& scenegraph) {
+   mSceneGraph = scenegraph;
+}
+
+//--------------------------------------------------------------------------
+Vt::Scene::SceneGraph & Vt::Scene::Scene::sceneGraph() {
+   return *mSceneGraph.get();
+}
+
 void Vt::Scene::Scene::onLoaded() {
 }
 
@@ -203,11 +215,13 @@ void Vt::Scene::Scene::_unload() {
 void Vt::Scene::Scene::_draw(const std::chrono::high_resolution_clock::duration & delta) {
    draw(delta);
    //look for scene node in graph and draw all objects
+   sceneGraph()._draw(delta);
 }
 
 void Vt::Scene::Scene::_tick(const std::chrono::high_resolution_clock::duration & delta) {
    tick(delta);
    //look for scene node in graph and tick all objects
+   sceneGraph()._tick(delta);
 }
 
 void Vt::Scene::Scene::_onLoaded() {

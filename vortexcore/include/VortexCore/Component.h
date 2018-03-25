@@ -15,6 +15,7 @@ namespace Vt {
 
     class VORTEX_API Component : public std::enable_shared_from_this<Component>{
     public:
+       friend class Vt::Scene::Scene;
       Component(Vt::Scene::SceneObject& parent, const std::string& name="Component");
       virtual ~Component();
       const std::string& name() const;
@@ -31,6 +32,7 @@ namespace Vt {
       Vt::Delegate<void, std::shared_ptr<Component>&> OnBeginPlay;
       Vt::Delegate<void, std::shared_ptr<Component>&> OnEndPlay;
       Vt::Delegate<void, std::shared_ptr<Component>&, const std::chrono::high_resolution_clock::duration&> OnTick;
+      Vt::Delegate<void, std::shared_ptr<Component>&, const std::chrono::high_resolution_clock::duration&> OnDraw;
 
     protected:
       virtual void onActivate();
@@ -39,8 +41,13 @@ namespace Vt {
       virtual void onBeginPlay(Vt::Scene::SceneObject& sender);
       virtual void onEndPlay(Vt::Scene::SceneObject& sender);
       virtual void onTick(Vt::Scene::SceneObject& sender, const std::chrono::high_resolution_clock::duration &delta);
+      virtual void onDraw(Vt::Scene::SceneObject& sender, const std::chrono::high_resolution_clock::duration &delta);
 
-    protected:
+    private:
+       void _draw(Vt::Scene::SceneObject& sender, const std::chrono::high_resolution_clock::duration &delta);
+       void _tick(Vt::Scene::SceneObject& sender, const std::chrono::high_resolution_clock::duration &delta);
+
+
       Vt::Scene::SceneObject& mParent;
       bool mActive = true;
       bool mCanTick = true;

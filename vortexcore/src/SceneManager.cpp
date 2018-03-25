@@ -45,10 +45,6 @@ void Vt::Scene::SceneManager::unloadResources() {
 
 }
 
-//--------------------------------------------------------------------------
-Vt::Scene::SceneGraph & Vt::Scene::SceneManager::sceneGraph() {
-    return *mSceneGraph.get();
-}
 
 //--------------------------------------------------------------------------
 std::vector<Vt::Scene::Scene*> Vt::Scene::SceneManager::activeScenes() {
@@ -74,9 +70,6 @@ Vt::Game & Vt::Scene::SceneManager::game() {
    return mGame;
 }
 
-void Vt::Scene::SceneManager::setSceneGraph(const std::shared_ptr<Vt::Scene::SceneGraph>& scenegraph) {
-   mSceneGraph = scenegraph;
-}
 
 void Vt::Scene::SceneManager::_loadResources() {
    loadResources();

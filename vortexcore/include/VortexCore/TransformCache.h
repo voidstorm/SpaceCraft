@@ -14,7 +14,7 @@ namespace Vt {
       virtual void revokeTransform(const Transform & transform);
       virtual const Transform* data() const;
     private:
-      unsigned mCurrentTransform;
+      unsigned mCurrentTransform = 0;
       std::vector<Transform> mTransforms;
       std::vector<unsigned> mFreelist;
     };

@@ -28,8 +28,7 @@ Vt::Scene::Transform & Vt::Scene::TransformCache::requestTransform() {
 
   //if we dont find a transform, generate a new one
   mTransforms.emplace_back();
-  mCurrentTransform++;
-  return mTransforms[mCurrentTransform];
+  return mTransforms[mCurrentTransform++];
 }
 
 //we could optimize by calculating the index, which would just be something like

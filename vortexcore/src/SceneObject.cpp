@@ -17,6 +17,22 @@ Vt::Scene::SceneObject::~SceneObject() {
    mScene.transformCache().revokeTransform(mTransform);
 }
 
+void Vt::Scene::SceneObject::addChild(const std::shared_ptr<SceneObject>& child) {
+   child->mParent = shared_from_this();
+   mChildren.push_back(child);
+}
+
+void Vt::Scene::SceneObject::addChildren(const std::vector<std::shared_ptr<SceneObject>>& children) {
+   for (auto &c : children) {
+      c->mParent = shared_from_this();
+   }
+   mChildren.insert(mChildren.end(), children.begin(), children.end());
+}
+
+std::vector<std::shared_ptr<Vt::Scene::SceneObject>>& Vt::Scene::SceneObject::children() {
+   return mChildren;
+}
+
 ////-------------------------------------------------------------------------------------------------
 //bool Vt::Scene::SceneObject::addComponent(std::unique_ptr<Component>&& component) {
 //  auto it=std::find_if(mComponents.begin(), mComponents.end(), [&] (auto &p) {
@@ -134,6 +150,9 @@ void Vt::Scene::SceneObject::onEndPlay() {
 void Vt::Scene::SceneObject::onTick(const std::chrono::high_resolution_clock::duration & delta) {
 }
 
+void Vt::Scene::SceneObject::onDraw(const std::chrono::high_resolution_clock::duration & delta) {
+}
+
 //-------------------------------------------------------------------------------------------------
 void Vt::Scene::SceneObject::_onActivate() {
    if (!mActive)
@@ -159,7 +178,19 @@ void Vt::Scene::SceneObject::_onDeactivate() {
 void Vt::Scene::SceneObject::_tick(const std::chrono::high_resolution_clock::duration &delta) {
    if (!mActive || !mCanTick)
       return;
+   onTick(delta);
+   OnTick(*this, delta);
    for (auto &c : *this) {
-      c.second.get()->onTick(*this, delta);
+      c.second.get()->_tick(*this, delta);
+   }
+}
+
+void Vt::Scene::SceneObject::_draw(const std::chrono::high_resolution_clock::duration & delta) {
+   if (!mVisible)
+      return;
+   onDraw(delta);
+   OnDraw(*this, delta);
+   for (auto &c : *this) {
+      c.second.get()->_draw(*this, delta);
    }
 }

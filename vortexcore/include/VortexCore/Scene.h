@@ -13,7 +13,7 @@
 
 namespace Vt {
 namespace Scene {
-class VORTEX_API Scene : public Vt::Aggregate {
+class VORTEX_API Scene : public Vt::Aggregate{
    friend class Game;
    friend class SceneManager;
 public:
@@ -32,6 +32,12 @@ public:
    virtual bool loaded();
    SceneManager& sceneManager() const;
    Vt::Gfx::RenderContext& renderContext() const;
+
+   //returns the associated scene graph
+   virtual Vt::Scene::SceneGraph& sceneGraph();
+   //sets the current scene graph
+   virtual void setSceneGraph(const std::shared_ptr<Vt::Scene::SceneGraph>& scenegraph);
+
 
 protected:
    virtual void load();
@@ -66,6 +72,7 @@ private:
    void _onShow();
    void _onHide();
 
+   std::shared_ptr<Vt::Scene::SceneGraph> mSceneGraph;
    std::unique_ptr<TransformCache> mTransformCache;
    std::string mName;
    SceneManager &mSceneManager;
